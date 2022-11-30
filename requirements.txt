@@ -1,0 +1,8 @@
+django
+django-extensions
+django-cors-headers
+djangorestframework
+django-rest-auth
+django-allauth
+djangorestframework-jwt
+Pillow
