@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from rest_framework import routers
 
-from rest_auth.registration.views import (
+from dj_rest_auth.registration.views import (
     SocialAccountListView, SocialAccountDisconnectView
 )
 from accounts.views import (
@@ -16,7 +16,8 @@ router.register(r'user_profiles', UserProfileViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    # path('auth/', include('rest_auth.urls')),
+    path('auth/', include('dj_rest_auth.urls')),
+    path('auth/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')),
 
     path('auth/apple/', AppleLogin.as_view(), name='apple_login'),

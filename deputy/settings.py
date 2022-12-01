@@ -10,20 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import django
-
-from django.utils.encoding import smart_str
-django.utils.encoding.smart_text = smart_str
-
-from django.utils.encoding import force_str
-django.utils.encoding.force_text = force_str
-
-from django.utils.translation import gettext
-django.utils.translation.ugettext = gettext
-
-from django.utils.translation import gettext_lazy
-django.utils.translation.ugettext_lazy = gettext_lazy
-
 import datetime
 import os
 
@@ -60,12 +46,12 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_auth',
+    'dj_rest_auth',
 
     'django.contrib.sites',
     'allauth',
     'allauth.account',
-    'rest_auth.registration',
+    'dj_rest_auth.registration',
 
     'allauth.socialaccount',
     'allauth.socialaccount.providers.apple',
@@ -100,10 +86,19 @@ c3ts3cr3t
     }
 }
 
-AUTHENTICATION_BACKENDS = [ 'django.contrib.auth.backends.AllowAllUsersModelBackend']
+AUTHENTICATION_BACKENDS = [
+    'allauth.account.auth_backends.AuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 AUTH_USER_MODEL = 'accounts.User'
 REST_USE_JWT = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+# ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+# LOGIN_URL = 'http://localhost:8000/api/auth/login'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -155,14 +150,16 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
     ],
 }
+
+JWT_AUTH_COOKIE = 'my-app-auth'
 
 JWT_AUTH = {
     # If the secret is wrong, it will raise a jwt.DecodeError telling you as such.

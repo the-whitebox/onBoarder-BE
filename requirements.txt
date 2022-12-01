@@ -2,7 +2,7 @@ django
 django-extensions
 django-cors-headers
 djangorestframework
-django-rest-auth
+dj-rest-auth
 django-allauth
-djangorestframework-jwt
+djangorestframework-simplejwt
 Pillow

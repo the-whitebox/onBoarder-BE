@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
 # from .adapters import AppleOAuth2Adapter
-from rest_auth.registration.views import (
+from dj_rest_auth.registration.views import (
     SocialLoginView,
     SocialConnectView
 )
