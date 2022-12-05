@@ -56,6 +56,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.apple',
 
+    # 'encrypted_model_fields',
+    # 'djxero',
+
     'accounts',
 ]
 
@@ -142,8 +145,12 @@ WSGI_APPLICATION = 'deputy.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+       'ENGINE': 'django.db.backends.postgresql',
+       'NAME': 'Onboarder',
+       'USER': 'postgres',
+       'PASSWORD': 'postgres',
+       'HOST': 'localhost',
+       'PORT': '5432',
     }
 }
 
