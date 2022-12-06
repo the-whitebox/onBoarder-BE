@@ -61,14 +61,14 @@ def delete_old_image(sender, instance, *args, **kwargs):
 
 class User(AbstractUser, DeputyBaseModel):
     username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(_('email address'), null=True, blank=True)
+    email = models.EmailField(_('email address'), unique=True)
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
     is_client = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'profile']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']
 
     def __str__(self):
         return "{}".format(self.username)

@@ -68,9 +68,9 @@ class UserRegistartionView(APIView):
     @transaction.atomic
     def post(self, *args, **kwargs):
         try:
-            username = self.request.POST.get('username')
-            email = self.request.POST.get('email')
-            if User.objects.filter(email=email).exists():
+            username = self.request.POST.get('username', None)
+            email = self.request.POST.get('email', None)
+            if User.objects.filter(email=email).exists() or email is None:
                 return Response({'data': f"User with {email} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
             user = User.objects.create(email=email, username=username, is_admin=True, profile=user_profile)
