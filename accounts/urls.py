@@ -7,7 +7,8 @@ from dj_rest_auth.registration.views import (
 )
 from accounts.views import (
     UserViewSet, UserProfileViewSet,
-    AppleLogin, AppleConnect
+    AppleLogin, AppleConnect,
+    UserRegistartionView
 )
 
 router = routers.DefaultRouter()
@@ -17,7 +18,8 @@ router.register(r'user_profiles', UserProfileViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include('dj_rest_auth.urls')),
-    path('auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('auth/user/registration/', UserRegistartionView.as_view()),
+    path('auth/business/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')),
 
     path('auth/apple/', AppleLogin.as_view(), name='apple_login'),
