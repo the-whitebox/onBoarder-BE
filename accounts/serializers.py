@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from django.contrib.auth import get_user_model
 from accounts.models import (
-    UserProfile
+    UserProfile, BusinessProfile
 )
 # from django.contrib.auth.models import Group
 from custom_utilities.helpers import get_base64_image
@@ -142,3 +142,12 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+class BusinessProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(required=False)
+    class Meta:
+        model = BusinessProfile
+        fields = (
+            'id', 'business_name', 'mobile_number', 'business_type', 'industry_type', 'total_employees', 'joining_purpose', 
+            'payroll_type', 'pay_proces_improvement_duration', 'how_you_hear', 'user'
+            )

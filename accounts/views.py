@@ -14,8 +14,14 @@ from dj_rest_auth.registration.views import (
 
 # from django.contrib.auth.models import Group
 
-from accounts.models import User, UserProfile
-from accounts.serializers import UserSerializer, UserProfileSerializer
+from accounts.models import (
+    User, UserProfile,
+    BusinessProfile
+    )
+from accounts.serializers import (
+    UserSerializer, UserProfileSerializer,
+    BusinessProfileSerializer
+    )
 
 # from accounts.permissions import IsLoggedInUserOrAdmin, IsAdminUser
 from django.core.mail import send_mail
@@ -68,9 +74,9 @@ class UserRegistartionView(APIView):
     @transaction.atomic
     def post(self, *args, **kwargs):
         try:
-            username = self.request.POST.get('username', None)
-            email = self.request.POST.get('email', None)
-            if User.objects.filter(email=email).exists() or email is None:
+            username = self.request.POST.get('username')
+            email = self.request.POST.get('email')
+            if User.objects.filter(email=email).exists():
                 return Response({'data': f"User with {email} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
             user = User.objects.create(email=email, username=username, is_admin=True, profile=user_profile)
@@ -92,3 +98,10 @@ class UserRegistartionView(APIView):
             LOG.error('User %s: Profile is not created' % (username,))
             return Response({'error': e},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class BusinessRegistrationViewSet(viewsets.ModelViewSet):
+    queryset = BusinessProfile.objects.all()
+    serializer_class = BusinessProfileSerializer
+
+    def perform_create(self, serializer):
+        return serializer.save(user = self.request.user)
