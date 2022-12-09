@@ -15,10 +15,11 @@ from dj_rest_auth.registration.views import (
 # from django.contrib.auth.models import Group
 
 from accounts.models import (
-    User, UserProfile
+    User, UserProfile, ENUMS
     )
 from accounts.serializers import (
-    UserSerializer, UserProfileSerializer
+    UserSerializer, UserProfileSerializer,
+    ENUMSerializer
     )
 
 # from accounts.permissions import IsLoggedInUserOrAdmin, IsAdminUser
@@ -57,6 +58,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     #     elif self.action == 'list' or self.action == 'destroy':
     #         permission_classes = [IsAdminUser]
     #     return [permission() for permission in permission_classes]
+
+class ENUMSViewSet(viewsets.ModelViewSet):
+    queryset = ENUMS.objects.all()
+    serializer_class = ENUMSerializer
 
 
 class AppleLogin(SocialLoginView):
