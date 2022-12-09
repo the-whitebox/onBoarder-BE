@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.apple',
 
     'accounts',
+    'business',
+    'employment',
 ]
 
 SITE_ID = 1

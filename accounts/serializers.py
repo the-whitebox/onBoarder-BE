@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from django.contrib.auth import get_user_model
 from accounts.models import (
-    UserProfile, BusinessProfile
+    UserProfile,
 )
 # from django.contrib.auth.models import Group
 from custom_utilities.helpers import get_base64_image
@@ -84,7 +84,7 @@ class UserSerializer(serializers.ModelSerializer):
         depth = 0
         model = User
         fields = (
-            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'is_admin', 'is_client', 'password', 'username',
+            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'password', 'username',
             'email', 'profile', 'user_status', 'is_active'
         )
         # read_only_fields = ('groups', )
@@ -129,8 +129,6 @@ class UserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.is_superuser = validated_data.get('is_superuser', instance.is_superuser)
-        instance.is_client = validated_data.get('is_client', instance.is_client)
-        instance.is_admin = validated_data.get('is_admin', instance.is_admin)
         instance.save()
 
         # instance.groups.clear()
@@ -142,12 +140,3 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
-
-class BusinessProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=False)
-    class Meta:
-        model = BusinessProfile
-        fields = (
-            'id', 'business_name', 'mobile_number', 'business_type', 'industry_type', 'total_employees', 'joining_purpose', 
-            'payroll_type', 'pay_proces_improvement_duration', 'how_you_hear', 'user'
-            )

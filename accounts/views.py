@@ -15,12 +15,10 @@ from dj_rest_auth.registration.views import (
 # from django.contrib.auth.models import Group
 
 from accounts.models import (
-    User, UserProfile,
-    BusinessProfile
+    User, UserProfile
     )
 from accounts.serializers import (
-    UserSerializer, UserProfileSerializer,
-    BusinessProfileSerializer
+    UserSerializer, UserProfileSerializer
     )
 
 # from accounts.permissions import IsLoggedInUserOrAdmin, IsAdminUser
@@ -79,7 +77,7 @@ class UserRegistartionView(APIView):
             if User.objects.filter(email=email).exists():
                 return Response({'data': f"User with {email} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
-            user = User.objects.create(email=email, username=username, is_admin=True, profile=user_profile)
+            user = User.objects.create(email=email, username=username, profile=user_profile)
             password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
             user.set_password(password)
             user.save()
@@ -98,10 +96,3 @@ class UserRegistartionView(APIView):
             LOG.error('User %s: Profile is not created' % (username,))
             return Response({'error': e},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class BusinessRegistrationViewSet(viewsets.ModelViewSet):
-    queryset = BusinessProfile.objects.all()
-    serializer_class = BusinessProfileSerializer
-
-    def perform_create(self, serializer):
-        return serializer.save(user = self.request.user)

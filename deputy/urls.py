@@ -20,8 +20,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('api/admin/', admin.site.urls),
-    
+
     path('api/', include('accounts.urls')),
+    path('api/', include('business.urls')),
+    path('api/', include('employment.urls')),
     # path('oauth/login/', obtain_jwt_token),
     # path('oauth/refresh/', refresh_jwt_token),  # Not Tested
     # path('oauth/verify-token/', verify_jwt_token),  # Not Tested
