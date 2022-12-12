@@ -11,12 +11,13 @@ from dj_rest_auth.views import PasswordResetConfirmView
 from accounts.views import (
     UserViewSet, UserProfileViewSet,
     AppleLogin, AppleConnect,
-    UserRegistartionView
+    UserRegistartionView, ENUMSViewSet
 )
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'user_profiles', UserProfileViewSet)
+router.register(r'enums', ENUMSViewSet, basename='enums')
 
 urlpatterns = [
     path('', include(router.urls)),

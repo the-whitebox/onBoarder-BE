@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from django.contrib.auth import get_user_model
 from accounts.models import (
-    UserProfile,
+    UserProfile, ENUMS
 )
 # from django.contrib.auth.models import Group
 from custom_utilities.helpers import get_base64_image
@@ -12,8 +12,8 @@ User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField(read_only=True)
-    relative_profile_avatar = serializers.SerializerMethodField(read_only=True)
-    encoded_profile_avatar = serializers.SerializerMethodField(read_only=True)
+    # relative_profile_avatar = serializers.SerializerMethodField(read_only=True)
+    # encoded_profile_avatar = serializers.SerializerMethodField(read_only=True)
     user_name = serializers.CharField(required=False)
     # full_name = serializers.CharField(required=False)
     # full_name = serializers.SerializerMethodField(read_only=True)
@@ -31,29 +31,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_user_id(obj):
         return obj.user.id
 
-    @staticmethod
-    def get_relative_profile_avatar(obj):
-        if obj.profile_avatar:
-            return obj.profile_avatar.url
+    # @staticmethod
+    # def get_relative_profile_avatar(obj):
+    #     if obj.profile_avatar:
+    #         # return obj.profile_avatar.url
+    #         return obj.profile_avatar
 
-    @staticmethod
-    def get_relative_path_profile_avatar(obj):
-        if obj.profile_avatar:
-            return obj.profile_avatar.path
+    # @staticmethod
+    # def get_relative_path_profile_avatar(obj):
+    #     if obj.profile_avatar:
+    #         # return obj.profile_avatar.path
+    #         return obj.profile_avatar
 
-    @staticmethod
-    def get_encoded_profile_avatar(obj):
-        image_path = UserProfileSerializer.get_relative_path_profile_avatar(obj)
-        return get_base64_image(image_path)
+    # @staticmethod
+    # def get_encoded_profile_avatar(obj):
+    #     image_path = UserProfileSerializer.get_relative_path_profile_avatar(obj)
+    #     return get_base64_image(image_path)
 
     class Meta:
         model = UserProfile
         fields = (
-            'id', 'profile_avatar', 'relative_profile_avatar', 'encoded_profile_avatar', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'username',
+            'id', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'username',
             'user_name', 'full_name', 'user_id')
 
     def update(self, instance, validated_data):
-        instance.profile_avatar = validated_data.get('profile_avatar', instance.profile_avatar)
+        # instance.profile_avatar = validated_data.get('profile_avatar', instance.profile_avatar)
         instance.user.username = validated_data.get('user_name', instance.user.username)
         instance.display_name = validated_data.get('display_name', instance.display_name)
         instance.state = validated_data.get('state', instance.state)
@@ -140,3 +142,10 @@ class UserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+class ENUMSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ENUMS
+        fields = (
+            'id', 'name', 'reference_id', 'group'
+            )

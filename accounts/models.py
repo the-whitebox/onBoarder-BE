@@ -19,7 +19,7 @@ class Document(DeputyBaseModel):
 
 class ENUMS(DeputyBaseModel):
     name = models.CharField(max_length=450, null=True,blank=True)
-    reference_id = models.PositiveIntegerField()
+    reference_id = models.PositiveIntegerField(null=True, blank=True)
     group = models.CharField(max_length=255, null=True,blank=True)
 
     def __str__(self):
