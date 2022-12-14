@@ -15,7 +15,7 @@ from accounts.views import (
 )
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
+router.register(r'people', UserViewSet, basename='user')
 router.register(r'user_profiles', UserProfileViewSet)
 router.register(r'enums', ENUMSViewSet, basename='enums')
 
