@@ -64,7 +64,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = (
             'id', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'emergency_contact_name', 'emergency_phone_number', 'username',
-            'date_of_birth', 'gender', 'pronouns', 'custom_pronoun', 'user_name', 'full_name', 'user_id')
+            'date_of_birth', 'gender', 'pronouns', 'custom_pronoun', 'invitation_key', 'user_name', 'full_name', 'user_id')
 
     def update(self, instance, validated_data):
         # instance.profile_avatar = validated_data.get('profile_avatar', instance.profile_avatar)

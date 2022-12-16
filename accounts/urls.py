@@ -11,7 +11,8 @@ from dj_rest_auth.views import PasswordResetConfirmView
 from accounts.views import (
     UserViewSet, UserProfileViewSet,
     AppleLogin, AppleConnect,
-    UserRegistartionView, ENUMSViewSet
+    UserRegistartionView, ENUMSViewSet,
+    InvitationLinkView
 )
 
 router = routers.DefaultRouter()
@@ -27,8 +28,10 @@ urlpatterns = [
     ),
     path('auth/', include('dj_rest_auth.urls')),
     path('auth/user/registration/', UserRegistartionView.as_view()),
+    path('invitation_link/', InvitationLinkView.as_view()),
     # path('auth/business/registration/', ),
     path('accounts/', include('allauth.urls')),
+    path("invitations/", include('invitations.urls', namespace='invitations')),
 
     path('auth/apple/', AppleLogin.as_view(), name='apple_login'),
     path('auth/apple/connect/', AppleConnect.as_view(), name='apple_connect'),

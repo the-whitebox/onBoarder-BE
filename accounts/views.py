@@ -27,6 +27,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
 from rest_framework.decorators import action
+from django.utils.crypto import get_random_string
+from django.db.models import Q
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -102,8 +104,8 @@ class UserRegistartionView(APIView):
         try:
             username = self.request.POST.get('username')
             email = self.request.POST.get('email')
-            if User.objects.filter(email=email).exists():
-                return Response({'data': f"User with {email} already exist."}, status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(Q(email=email) | Q(username=username)).exists():
+                return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
             try:
                 role = Role.objects.get(role=Role.SYSTEM_ADMINISTRATOR)
@@ -129,4 +131,24 @@ class UserRegistartionView(APIView):
         except Exception as e:
             LOG.error('User %s: Profile is not created' % (username,), e)
             return Response({'error': 'Profile is not created'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class InvitationLinkView(APIView):
+    def post(self, *args, **kwargs):
+        try:
+            try:
+                user = User.objects.get(pk=self.request.user.id)
+                unique_id = get_random_string(length=64)
+                user.profile.invitation_key = unique_id
+                user.profile.save()
+            except User.DoesNotExist:
+                LOG.error('User Does not exist')
+                return Response({'error': 'user_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'invitation_link': unique_id}, status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(e)
+            return Response({'error': 'Link is not created '},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
