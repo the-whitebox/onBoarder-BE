@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 
     'allauth.socialaccount',
     'allauth.socialaccount.providers.apple',
+    'allauth.socialaccount.providers.google',
 
     'accounts',
     'business',
@@ -86,6 +87,20 @@ c3ts3cr3t
 """
         }
     }
+}
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    },
+
+
 }
 
 AUTHENTICATION_BACKENDS = [

@@ -10,8 +10,8 @@ from dj_rest_auth.views import PasswordResetConfirmView
 
 from accounts.views import (
     UserViewSet, UserProfileViewSet,
-    AppleLogin, AppleConnect,
-    UserRegistartionView, ENUMSViewSet
+    AppleLogin, AppleConnect,GoogleConnect,
+    UserRegistartionView, ENUMSViewSet, GoogleLogin
 )
 
 router = routers.DefaultRouter()
@@ -32,7 +32,10 @@ urlpatterns = [
 
     path('auth/apple/', AppleLogin.as_view(), name='apple_login'),
     path('auth/apple/connect/', AppleConnect.as_view(), name='apple_connect'),
-    
+
+    path('auth/google/', GoogleLogin.as_view(), name='google_login'),
+    path('auth/google/connect/', GoogleConnect.as_view(), name='google_connect'),
+
     path('socialaccounts/', SocialAccountListView.as_view(), name='social_account_list'),
     path('socialaccounts/<int:pk>/disconnect/', SocialAccountDisconnectView.as_view(),
          name='social_account_disconnect')

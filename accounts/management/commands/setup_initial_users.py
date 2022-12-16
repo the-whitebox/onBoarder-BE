@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
             # Create second company user
             user_profile = UserProfile.objects.create()
-
+# Check Git changes
             user = User.objects.create(email="user2@company1.com", username="company1_user_2", role=location_manager, first_name="company1",
                                        last_name="user2", profile=user_profile)
             user.set_password("user1234")

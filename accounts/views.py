@@ -2,6 +2,7 @@ from rest_framework import (
     viewsets, views,
     status, permissions
     )
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -93,6 +94,14 @@ class AppleLogin(SocialLoginView):
 
 class AppleConnect(SocialConnectView):
     adapter_class = AppleOAuth2Adapter
+
+
+class GoogleLogin(SocialLoginView): # if you want to use Implicit Grant, use this
+    adapter_class = GoogleOAuth2Adapter
+
+
+class GoogleConnect(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
 
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
