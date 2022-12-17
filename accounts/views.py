@@ -40,7 +40,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super(UserViewSet, self).get_queryset()
         if self.request.GET.get('business_id', None):
-            return User.obects.filter(business__id=self.request.GET.get('business_id'))
+            return User.objects.filter(business__id=self.request.GET.get('business_id'))
         return queryset
     
     @action(methods=['patch'], detail=False)
@@ -146,9 +146,26 @@ class InvitationLinkView(APIView):
                 return Response({'error': 'user_not_found'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            return Response({'invitation_link': unique_id}, status.HTTP_200_OK)
+            return Response({'invitation_link': f'http://127.0.0.1:8000/{unique_id}'}, status.HTTP_200_OK)
             
         except Exception as e:
-            print(e)
-            return Response({'error': 'Link is not created '},
+            return Response({'error': 'Link is not created'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def delete(self, *args, **kwargs):
+        try:
+            try:
+                user = User.objects.get(pk=self.request.user.id)
+                user.profile.invitation_key = None
+                user.profile.save()
+            except User.DoesNotExist:
+                LOG.error('User Does not exist')
+                return Response({'error': 'user_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'invitation_link': user.profile.invitation_key}, status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': 'Link is not deleted'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
