@@ -30,6 +30,7 @@ class UserAdmin(BaseUserAdmin):
                                        'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Roles'), {'fields': ('role',)}),
+        (_('Business'), {'fields': ('business',)}),
     )
     add_fieldsets = (
         (None, {

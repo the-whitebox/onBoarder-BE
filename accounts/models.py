@@ -65,6 +65,7 @@ class UserProfile(DeputyBaseModel):
     gender = models.PositiveIntegerField(null=True,blank=True)
     pronouns = models.PositiveIntegerField(null=True,blank=True)
     custom_pronoun = models.CharField(max_length=255, blank=True,null=True)
+    invitation_key = models.CharField(max_length=255, blank=True,null=True)
 
     def __str__(self):
         return str(self.user.email)
@@ -106,7 +107,7 @@ class User(AbstractUser, DeputyBaseModel):
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True, blank=True)
+    business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']

@@ -15,7 +15,7 @@ from dj_rest_auth.registration.views import (
 # from django.contrib.auth.models import Group
 
 from accounts.models import (
-    User, UserProfile, ENUMS
+    User, UserProfile, ENUMS, Role
     )
 from accounts.serializers import (
     UserSerializer, UserProfileSerializer,
@@ -26,6 +26,9 @@ from accounts.serializers import (
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
+from rest_framework.decorators import action
+from django.utils.crypto import get_random_string
+from django.db.models import Q
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -33,6 +36,28 @@ LOG = logging.getLogger('accounts.views')
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        queryset = super(UserViewSet, self).get_queryset()
+        if self.request.GET.get('business_id', None):
+            return User.objects.filter(business__id=self.request.GET.get('business_id'))
+        return queryset
+    
+    @action(methods=['patch'], detail=False)
+    def bulk_update(self, request):
+
+        data = {  # we need to separate out the id from the data
+            i['id']: {k: v for k, v in i.items() if k != 'id'}
+            for i in request.data
+        }
+        response = []
+        for inst in self.get_queryset().filter(id__in=data.keys()):
+            serializer = self.get_serializer(inst, data=data[inst.id], partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response.append(serializer.data)
+
+        return Response(response, status=status.HTTP_200_OK)
 
     # def get_permissions(self):
     #     permission_classes = []
@@ -79,10 +104,16 @@ class UserRegistartionView(APIView):
         try:
             username = self.request.POST.get('username')
             email = self.request.POST.get('email')
-            if User.objects.filter(email=email).exists():
-                return Response({'data': f"User with {email} already exist."}, status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(Q(email=email) | Q(username=username)).exists():
+                return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
-            user = User.objects.create(email=email, username=username, profile=user_profile)
+            try:
+                role = Role.objects.get(role=Role.SYSTEM_ADMINISTRATOR)
+            except Role.DoesNotExist:
+                LOG.error('User Role Does not exist for: %s' % username)
+                return Response({'error': 'profile_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            user = User.objects.create(email=email, role=role, username=username, profile=user_profile)
             password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
             user.set_password(password)
             user.save()
@@ -98,6 +129,43 @@ class UserRegistartionView(APIView):
             return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
-            LOG.error('User %s: Profile is not created' % (username,))
-            return Response({'error': e},
+            LOG.error('User %s: Profile is not created' % (username,), e)
+            return Response({'error': 'Profile is not created'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class InvitationLinkView(APIView):
+    def post(self, *args, **kwargs):
+        try:
+            try:
+                user = User.objects.get(pk=self.request.user.id)
+                unique_id = get_random_string(length=64)
+                user.profile.invitation_key = unique_id
+                user.profile.save()
+            except User.DoesNotExist:
+                LOG.error('User Does not exist')
+                return Response({'error': 'user_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'invitation_link': f'http://127.0.0.1:8000/{unique_id}'}, status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': 'Link is not created'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def delete(self, *args, **kwargs):
+        try:
+            try:
+                user = User.objects.get(pk=self.request.user.id)
+                user.profile.invitation_key = None
+                user.profile.save()
+            except User.DoesNotExist:
+                LOG.error('User Does not exist')
+                return Response({'error': 'user_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'invitation_link': user.profile.invitation_key}, status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': 'Link is not deleted'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
