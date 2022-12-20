@@ -11,7 +11,7 @@ class Business(DeputyBaseModel):
     employees_range = models.PositiveIntegerField(null=True,blank=True)
     joining_purpose = models.PositiveIntegerField(null=True,blank=True)
     payroll_type = models.PositiveIntegerField(null=True,blank=True)
-    pay_proces_improvement_duration = models.PositiveIntegerField(null=True,blank=True)
+    pay_process_improvement_duration = models.PositiveIntegerField(null=True,blank=True)
     how_you_hear = models.PositiveIntegerField(null=True,blank=True)
 
     def __str__(self):

@@ -98,7 +98,7 @@ class UserWorkingHours(DeputyBaseModel):
         return self.user.email
 
 class UserLeaveEntitlements(DeputyBaseModel):
-    user = models.OneToOneField(User, related_name='leave_entitlements', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='leave_entitlements', on_delete=models.CASCADE)
     leave_entitlement = models.PositiveIntegerField(null=True,blank=True)
 
     def __str__(self):

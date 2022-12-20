@@ -90,26 +90,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
         return instance
 
-class UserListSerializer(serializers.ListSerializer):
-    def update(self, instance, validated_data):
-        # Maps for id->instance and id->data item.
-        user_mapping = {user.id: user for user in instance}
-        data_mapping = {item['id']: item for item in validated_data}
-
-        # Perform creations and updates.
-        ret = []
-        for user_id, data in data_mapping.items():
-            user = user_mapping.get(user_id, None)
-            if user:
-                ret.append(self.child.update(user, data))
-
-        # # Perform deletions.
-        # for user_id, user in user_mapping.items():
-        #     if user_id not in data_mapping:
-        #         user.delete()
-
-        return ret
-
 class UserSerializer(serializers.ModelSerializer):
     def __init__(self, instance=None, data=empty, **kwargs):
         if instance:
@@ -122,7 +102,7 @@ class UserSerializer(serializers.ModelSerializer):
     work_detail = UserWorkDetailSerializer(required=False)
     pay_detail = UserPayDetailSerializer(required=False)
     working_hours = UserWorkingHoursSerializer(required=False)
-    leave_entitlements = UserLeaveEntitlementsSerializer(required=False)
+    leave_entitlements = UserLeaveEntitlementsSerializer(required=False, many=True)
     user_status = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
@@ -171,7 +151,7 @@ class UserSerializer(serializers.ModelSerializer):
         per_day_pay_rate=per_day_pay_rate)
         work_period = WorkPeriod.objects.create(user=user)
         working_hours = UserWorkingHours.objects.create(work_period=work_period, user=user)
-        leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
+        # leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
 
         profile.save()
 
@@ -276,6 +256,23 @@ class UserSerializer(serializers.ModelSerializer):
                 pay_detail.per_day_pay_rate.save()
 
             pay_detail.save()
+        
+        if working_hours_data:
+            working_hours.hours_per_work_period = working_hours_data.get('hours_per_work_period', working_hours.hours_per_work_period)
+            working_hours.total_hours_for_work_period = working_hours_data.get('total_hours_for_work_period', working_hours.total_hours_for_work_period)
+            working_hours.pay_overtime = working_hours_data.get('pay_overtime', working_hours.pay_overtime)
+            working_hours.stress_level = working_hours_data.get('stress_level', working_hours.stress_level)
+
+            # Update the attributes of the work_period model on the nested instance
+            if working_hours_data.get('work_period', None):
+                working_hours.work_period.work_period_length = working_hours_data.get('work_period', working_hours.work_period.work_period_length).get('work_period_length', working_hours.work_period.work_period_length)
+                working_hours.work_period.next_work_period_day = working_hours_data.get('work_period', working_hours.work_period.next_work_period_day).get('next_work_period_day', working_hours.work_period.next_work_period_day)
+                working_hours.work_period.save()
+
+            working_hours.save()
+        
+        # if leave_entitlements_data:
+
 
         return instance
     
