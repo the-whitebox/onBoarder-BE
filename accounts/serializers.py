@@ -1,5 +1,4 @@
 from rest_framework import serializers
-# from .models import User,UserProfile
 from rest_framework.fields import empty
 from django.contrib.auth import get_user_model
 from accounts.models import (
@@ -41,7 +40,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # # full_name = serializers.CharField(required=False)
     # # full_name = serializers.SerializerMethodField(read_only=True)
     user_id = serializers.SerializerMethodField(read_only=True)
-    # print(username)
     @staticmethod
     def get_username(obj):
         return obj.user.username
@@ -77,29 +75,29 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'emergency_contact_name', 'emergency_phone_number', 'username',
             'date_of_birth', 'gender', 'pronouns', 'custom_pronoun', 'invitation_key', 'user_name', 'full_name', 'user_id')
 
-    # def update(self, instance, validated_data):
-    #     # instance.profile_avatar = validated_data.get('profile_avatar', instance.profile_avatar)
-    #     instance.user.username = validated_data.get('user_name', instance.user.username)
-    #     instance.display_name = validated_data.get('display_name', instance.display_name)
-    #     instance.state = validated_data.get('state', instance.state)
-    #     instance.country = validated_data.get('country', instance.country)
-    #     instance.city = validated_data.get('city', instance.city)
-    #     instance.address = validated_data.get('address', instance.address)
-    #     instance.zip_code = validated_data.get('zip_code', instance.zip_code)
-    #     instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-    #     instance.emergency_contact_name = validated_data.get('emergency_contact_name', instance.emergency_contact_name)
-    #     instance.emergency_phone_number = validated_data.get('emergency_phone_number', instance.emergency_phone_number)
-    #     instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
-    #     instance.gender = validated_data.get('gender', instance.gender)
-    #     instance.pronouns = validated_data.get('pronouns', instance.pronouns)
-    #     instance.custom_pronoun = validated_data.get('custom_pronoun', instance.custom_pronoun)
-    #     instance.full_name = validated_data.get('full_name', instance.full_name)
-    #     instance.email = validated_data.get('email', instance.email)
-    #     instance.save()
+    def update(self, instance, validated_data):
+        # instance.profile_avatar = validated_data.get('profile_avatar', instance.profile_avatar)
+        instance.user.username = validated_data.get('user_name', instance.user.username)
+        instance.display_name = validated_data.get('display_name', instance.display_name)
+        instance.state = validated_data.get('state', instance.state)
+        instance.country = validated_data.get('country', instance.country)
+        instance.city = validated_data.get('city', instance.city)
+        instance.address = validated_data.get('address', instance.address)
+        instance.zip_code = validated_data.get('zip_code', instance.zip_code)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.emergency_contact_name = validated_data.get('emergency_contact_name', instance.emergency_contact_name)
+        instance.emergency_phone_number = validated_data.get('emergency_phone_number', instance.emergency_phone_number)
+        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.pronouns = validated_data.get('pronouns', instance.pronouns)
+        instance.custom_pronoun = validated_data.get('custom_pronoun', instance.custom_pronoun)
+        instance.full_name = validated_data.get('full_name', instance.full_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
 
-    #     instance.user.save()
+        instance.user.save()
 
-    #     return instance
+        return instance
 
 class UserSerializer(serializers.ModelSerializer):
     def __init__(self, instance=None, data=empty, **kwargs):
