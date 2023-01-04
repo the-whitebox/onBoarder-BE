@@ -1,5 +1,4 @@
 from django.urls import path, include
-
 from rest_framework import routers
 
 from dj_rest_auth.registration.views import (

@@ -128,7 +128,7 @@ ROOT_URLCONF = 'deputy.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'accounts/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -234,3 +234,11 @@ EMAIL_HOST_USER = 'tahir.muhammad@crowdbotics.com'
 EMAIL_HOST_PASSWORD = 'jbfzjatisvddvhdh'
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+
+
+
+
+REST_AUTH_SERIALIZERS   = {
+    'PASSWORD_RESET_SERIALIZER': 
+        'accounts.serializers.CustomPasswordResetSerializer',
+}

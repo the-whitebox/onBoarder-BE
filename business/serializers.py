@@ -8,7 +8,7 @@ class BusinessSerializer(serializers.ModelSerializer):
         model = Business
         fields = (
             'id', 'business_name', 'mobile_number', 'business_type', 'industry_type', 'employees_range', 'joining_purpose', 
-            'payroll_type', 'pay_proces_improvement_duration', 'how_you_hear'
+            'payroll_type', 'pay_process_improvement_duration', 'how_you_hear'
             )
         
     def create(self, validated_data):
