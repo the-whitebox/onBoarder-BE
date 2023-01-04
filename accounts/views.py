@@ -102,8 +102,8 @@ class UserRegistartionView(APIView):
     @transaction.atomic
     def post(self, *args, **kwargs):
         try:
-            username = self.request.POST.get('username')
-            email = self.request.POST.get('email')
+            username = self.request.data.get('username')
+            email = self.request.data.get('email')
             if User.objects.filter(Q(email=email) | Q(username=username)).exists():
                 return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
@@ -129,6 +129,7 @@ class UserRegistartionView(APIView):
             return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
+            print("message", e)
             LOG.error('User %s: Profile is not created' % (username,), e)
             return Response({'error': 'Profile is not created'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
