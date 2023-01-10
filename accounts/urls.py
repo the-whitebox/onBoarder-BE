@@ -44,5 +44,4 @@ urlpatterns = [
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
 
-
 ]

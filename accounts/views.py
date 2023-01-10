@@ -170,10 +170,8 @@ class InvitationLinkView(APIView):
             return Response({'error': 'Link is not deleted'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-
 import csv
 import codecs
-
 class CsvReader(APIView):
 
     def post(self,request):
@@ -187,22 +185,27 @@ class CsvReader(APIView):
         data = []
         for row in reader:
             dict = {"name": row[0],
-            "email": row[1],"phone_number": row[2]}
+            "email": row[1],"phone_number": row[2],"role": row[3]}
             data.append(dict)
         return Response(data, status=status.HTTP_200_OK)
 
 class CsvNewUsers(APIView):
-    def create(self,request):
+    def post(self,request):
         username = self.request.data.get('username')
-        print(username)
         email = self.request.data.get('email')
-        print(email)
         phone_number = self.request.data.get('phone_number')
-        print(phone_number)
+        role = self.request.data.get('role')
         if User.objects.filter(Q(email=email) | Q(username=username)).exists():
             return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
         profile = UserProfile.objects.create(phone_number=phone_number)
-        user = User.objects.create(username=username, email=email, profile=profile)
+        role = Role.objects.create(role=role)
+        user = User.objects.create(username=username, email=email, profile=profile,role=role)
         user.save()
-        print(user)
-        return Response({'data': "User added successfully, please check your email"}, status.HTTP_200_OK)
+        email_sent = send_mail(
+                'Dupty',
+                f"welcome to deputy. You have been added as Team members with Email address: {email}",
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently = False,
+            )
+        return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
