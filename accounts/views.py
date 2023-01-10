@@ -170,3 +170,39 @@ class InvitationLinkView(APIView):
             return Response({'error': 'Link is not deleted'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+
+import csv
+import codecs
+
+class CsvReader(APIView):
+
+    def post(self,request):
+        file_obj = request.FILES['csv']
+        print(type(file_obj))
+        return Response(status=204)
+
+    def get(self,request,*args, **kwargs):
+        file = request.FILES['csv']
+        reader = csv.reader(codecs.iterdecode(file, 'utf-8'))
+        data = []
+        for row in reader:
+            dict = {"name": row[0],
+            "email": row[1],"phone_number": row[2]}
+            data.append(dict)
+        return Response(data, status=status.HTTP_200_OK)
+
+class CsvNewUsers(APIView):
+    def create(self,request):
+        username = self.request.data.get('username')
+        print(username)
+        email = self.request.data.get('email')
+        print(email)
+        phone_number = self.request.data.get('phone_number')
+        print(phone_number)
+        if User.objects.filter(Q(email=email) | Q(username=username)).exists():
+            return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
+        profile = UserProfile.objects.create(phone_number=phone_number)
+        user = User.objects.create(username=username, email=email, profile=profile)
+        user.save()
+        print(user)
+        return Response({'data': "User added successfully, please check your email"}, status.HTTP_200_OK)
