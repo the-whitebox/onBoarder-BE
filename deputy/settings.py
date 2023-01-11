@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
     'allauth.socialaccount',
     'allauth.socialaccount.providers.apple',
+    'allauth.socialaccount.providers.google',
     "invitations",
 
     'accounts',
