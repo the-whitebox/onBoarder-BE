@@ -190,22 +190,31 @@ class CsvReader(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 class CsvNewUsers(APIView):
-    def post(self,request):
-        username = self.request.data.get('username')
-        email = self.request.data.get('email')
-        phone_number = self.request.data.get('phone_number')
-        role = self.request.data.get('role')
-        if User.objects.filter(Q(email=email) | Q(username=username)).exists():
-            return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
-        profile = UserProfile.objects.create(phone_number=phone_number)
-        role = Role.objects.create(role=role)
-        user = User.objects.create(username=username, email=email, profile=profile,role=role)
-        user.save()
-        email_sent = send_mail(
-                'Dupty',
-                f"welcome to deputy. You have been added as Team members with Email address: {email}",
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently = False,
-            )
+    def post(self,request ,*args, **kwargs):
+        data = self.request.data
+        for row in data:
+            username=row.get('username', None)
+            email=row.get('email', None)
+            phone_number=row.get('phone_number', None)
+            role=row.get('role', None)
+            if username is not None or email is not None or role is not None or phone_number is not None:
+                try:
+                    role = Role.objects.get(role=role)
+                    user = User.objects.create(username=username,email=email,role=role)
+                    user.profile.phone_number = phone_number
+                    user.save()
+                except Role.DoesNotExist:
+                    LOG.error('Role Does not exist')
+                    return Response({'error': f"{username} has no Valid Role, That's why Users not Created"},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                email_sent = send_mail(
+                    'Dupty',
+                    f"welcome to deputy. You have been added as Team members with Email address: {email}",
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently = False,
+                )
+            else:
+                return Response({'Message': "Parameters missing"}, status.HTTP_400_BAD_REQUEST)
+
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
