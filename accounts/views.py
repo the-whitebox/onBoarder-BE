@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 # from .adapters import AppleOAuth2Adapter
 from dj_rest_auth.registration.views import (
     SocialLoginView,
@@ -95,6 +96,13 @@ class AppleLogin(SocialLoginView):
 
 class AppleConnect(SocialConnectView):
     adapter_class = AppleOAuth2Adapter
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+
+class GoogleConnect(SocialConnectView):
+    adapter_class = GoogleOAuth2Adapter
 
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
