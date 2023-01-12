@@ -111,7 +111,7 @@ class User(AbstractUser, DeputyBaseModel):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']
-
+    
     def __str__(self):
         return "{}".format(self.username)
 

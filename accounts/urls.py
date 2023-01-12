@@ -12,7 +12,8 @@ from accounts.views import (
     AppleLogin, AppleConnect,
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
-    InvitationLinkView
+    InvitationLinkView,CsvReader,
+    CsvNewUsers
 )
 
 router = routers.DefaultRouter()
@@ -41,5 +42,9 @@ urlpatterns = [
     
     path('socialaccounts/', SocialAccountListView.as_view(), name='social_account_list'),
     path('socialaccounts/<int:pk>/disconnect/', SocialAccountDisconnectView.as_view(),
-         name='social_account_disconnect')
+         name='social_account_disconnect'),
+
+    # path('upload/', UploadFileView.as_view(), name='upload-file'),
+    path('csvreader/', CsvReader.as_view(), name='CsvReader'),
+    path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
 ]

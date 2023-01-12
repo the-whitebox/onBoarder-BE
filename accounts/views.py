@@ -177,3 +177,52 @@ class InvitationLinkView(APIView):
         except Exception as e:
             return Response({'error': 'Link is not deleted'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+import csv
+import codecs
+class CsvReader(APIView):
+
+    def post(self,request):
+        file_obj = request.FILES['csv']
+        print(type(file_obj))
+        return Response(status=204)
+
+    def get(self,request,*args, **kwargs):
+        file = request.FILES['csv']
+        reader = csv.reader(codecs.iterdecode(file, 'utf-8'))
+        data = []
+        for row in reader:
+            dict = {"name": row[0],
+            "email": row[1],"phone_number": row[2],"role": row[3]}
+            data.append(dict)
+        return Response(data, status=status.HTTP_200_OK)
+
+class CsvNewUsers(APIView):
+    def post(self,request ,*args, **kwargs):
+        data = self.request.data
+        for row in data:
+            username=row.get('username', None)
+            email=row.get('email', None)
+            phone_number=row.get('phone_number', None)
+            role=row.get('role', None)
+            if username is not None or email is not None or role is not None or phone_number is not None:
+                try:
+                    role = Role.objects.get(role=role)
+                    user = User.objects.create(username=username,email=email,role=role)
+                    user.profile.phone_number = phone_number
+                    user.save()
+                except Role.DoesNotExist:
+                    LOG.error('Role Does not exist')
+                    return Response({'error': f"{username} has no Valid Role, That's why Users not Created"},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                email_sent = send_mail(
+                    'Dupty',
+                    f"welcome to deputy. You have been added as Team members with Email address: {email}",
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently = False,
+                )
+            else:
+                return Response({'Message': "Parameters missing"}, status.HTTP_400_BAD_REQUEST)
+
+        return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
