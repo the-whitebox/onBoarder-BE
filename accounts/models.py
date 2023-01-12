@@ -111,13 +111,7 @@ class User(AbstractUser, DeputyBaseModel):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']
-
-    # profile = Profile.objects.create(phone_number=phone_number)
-    # User.objects.create(username=username, email=email, profile=profile)
-
-    # user.profile.phone_number = phone_number 
-    # user.save()
-
+    
     def __str__(self):
         return "{}".format(self.username)
 
