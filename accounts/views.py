@@ -36,7 +36,6 @@ LOG = logging.getLogger('accounts.views')
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
     def get_queryset(self):
         queryset = super(UserViewSet, self).get_queryset()
         if self.request.GET.get('business_id', None):
@@ -119,8 +118,8 @@ class UserRegistartionView(APIView):
             user.save()
 
             email_sent = send_mail(
-                'Your Deputy login details',
-                f"Hi Muhammad Tahir,\n\nWelcome to your Deputy trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe Deputy Team",
+                'Your MaxPilot login details',
+                f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
@@ -209,7 +208,7 @@ class CsvNewUsers(APIView):
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 email_sent = send_mail(
                     'Dupty',
-                    f"welcome to deputy. You have been added as Team members with Email address: {email}",
+                    f"welcome to MaxPilot. You have been added as Team members with Email address: {email}",
                     settings.EMAIL_HOST_USER,
                     [email],
                     fail_silently = False,
@@ -218,3 +217,14 @@ class CsvNewUsers(APIView):
                 return Response({'Message': "Parameters missing"}, status.HTTP_400_BAD_REQUEST)
 
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
+
+
+class EnumsReturn(viewsets.ModelViewSet):
+    queryset = ENUMS.objects.all()
+    serializer_class = ENUMSerializer
+
+    def get_queryset(self):
+        queryset = super(EnumsReturn, self).get_queryset()
+        if self.request.GET.get('group',None):
+            return ENUMS.objects.filter(group=self.request.GET.get('group'))
+        return queryset

@@ -1,8 +1,8 @@
 from django.db import models
-from deputy.models import DeputyBaseModel
+from MaxPilot.models import MaxPilotBaseModel
 
 # Create your models here.
-class Business(DeputyBaseModel):
+class Business(MaxPilotBaseModel):
 
     business_name = models.CharField(max_length=70, blank=True, null=True)
     mobile_number = models.CharField(null=True, blank=True, max_length=255)
@@ -177,20 +177,20 @@ class Business(DeputyBaseModel):
     #     (JUST_LOOKING_AROUND, "Just looking around")
     # )
 
-    # USED_DEPUTY_IN_THE_PAST = "Used Deputy in the past"
+    # USED_MaxPilot_IN_THE_PAST = "Used MaxPilot in the past"
     # RECOMMENDED_FROM_A_FRIEND_OR_COLLEAGUE = "Recommended from a friend or colleague"
     # RECOMMENDED_FROM_A_BUSINESS_VENDOR = "Recommended from a business vendor"
     # READ_REVIEWS_OR_BLOG = "Read reviews or blog"
-    # SAW_AN_AD_ABOUT_DEPUTY = "Saw an ad about Deputy"
+    # SAW_AN_AD_ABOUT_MaxPilot = "Saw an ad about MaxPilot"
     # SEARCHED_THE_INTERNET = "Searched the internet"
     # OTHER = "Other"
 
     # HOW_YOU_HEAR_ABOUT_US = (
-    #     (USED_DEPUTY_IN_THE_PAST, "Used Deputy in the past"),
+    #     (USED_MaxPilot_IN_THE_PAST, "Used MaxPilot in the past"),
     #     (RECOMMENDED_FROM_A_FRIEND_OR_COLLEAGUE, "Recommended from a friend or colleague"),
     #     (RECOMMENDED_FROM_A_BUSINESS_VENDOR, "Recommended from a business vendor"),
     #     (READ_REVIEWS_OR_BLOG, "Read reviews or blog"),
-    #     (SAW_AN_AD_ABOUT_DEPUTY, "Saw an ad about Deputy"),
+    #     (SAW_AN_AD_ABOUT_MaxPilot, "Saw an ad about MaxPilot"),
     #     (SEARCHED_THE_INTERNET, "Searched the internet"),
     #     (OTHER, "Other")
     # )

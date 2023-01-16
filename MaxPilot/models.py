@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 
-class DeputyBaseModel(models.Model):
+class MaxPilotBaseModel(models.Model):
 
     created_on = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_on = models.DateTimeField(auto_now=True, blank=True, null=True)
