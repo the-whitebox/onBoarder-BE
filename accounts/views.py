@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 # from .adapters import AppleOAuth2Adapter
 from dj_rest_auth.registration.views import (
     SocialLoginView,
@@ -94,6 +95,13 @@ class AppleLogin(SocialLoginView):
 
 class AppleConnect(SocialConnectView):
     adapter_class = AppleOAuth2Adapter
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+
+class GoogleConnect(SocialConnectView):
+    adapter_class = GoogleOAuth2Adapter
 
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -217,14 +225,3 @@ class CsvNewUsers(APIView):
                 return Response({'Message': "Parameters missing"}, status.HTTP_400_BAD_REQUEST)
 
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
-
-
-class EnumsReturn(viewsets.ModelViewSet):
-    queryset = ENUMS.objects.all()
-    serializer_class = ENUMSerializer
-
-    def get_queryset(self):
-        queryset = super(EnumsReturn, self).get_queryset()
-        if self.request.GET.get('group',None):
-            return ENUMS.objects.filter(group=self.request.GET.get('group'))
-        return queryset
