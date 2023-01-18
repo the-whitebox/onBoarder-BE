@@ -13,7 +13,7 @@ from accounts.views import (
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
     InvitationLinkView,CsvReader,
-    CsvNewUsers,EnumsReturn
+    CsvNewUsers,EnumsReturn,ImageProfile
 )
 
 router = routers.DefaultRouter()
@@ -50,6 +50,6 @@ urlpatterns = [
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
 
-    # path('EnumsReturn/', EnumsReturn.as_view(), name='EnumsReturn'),
+    path('ImageProfile/', ImageProfile.as_view(), name='ImageProfile'),
 
 ]

@@ -16,7 +16,7 @@ from dj_rest_auth.registration.views import (
 # from django.contrib.auth.models import Group
 
 from accounts.models import (
-    User, UserProfile, ENUMS, Role
+    User, UserProfile, ENUMS, Role, Document
     )
 from accounts.serializers import (
     UserSerializer, UserProfileSerializer,
@@ -235,3 +235,16 @@ class EnumsReturn(viewsets.ModelViewSet):
         if self.request.GET.get('group',None):
             return ENUMS.objects.filter(group=self.request.GET.get('group'))
         return queryset
+
+class ImageProfile(APIView):
+    def post(self,request):
+        myuser = UserProfile.objects.get(user=request.user)
+        print(myuser)
+        img = Document.objects.create(content_object=myuser, image=request.FILES['image'])
+        img.image
+        print(img)
+        return Response("IMage Saved")
+    def get(self,request):
+        img = UserProfile.objects.filter(user=request.user, profile_avatar=request.FILES['image'])
+        print(img)
+        return Response("Profile Avatar")
