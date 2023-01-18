@@ -3,7 +3,7 @@ from rest_framework.fields import empty
 from django.contrib.auth import get_user_model
 from accounts.models import (
     UserProfile, ENUMS,
-    Role
+    Role, Document
 )
 from employment.serializers import (
     UserWorkDetailSerializer, UserPayDetailSerializer,
@@ -31,6 +31,18 @@ from django.contrib.sites.shortcuts import get_current_site
 
 
 User = get_user_model()
+
+class DocumentSerializer(serializers.ModelSerializer):
+    """Document serialization."""
+
+    class Meta:
+        model = Document
+        fields = [
+            'image',
+            'object_id',
+        ]
+
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField(read_only=True)
@@ -68,11 +80,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # def get_encoded_profile_avatar(obj):
     #     image_path = UserProfileSerializer.get_relative_path_profile_avatar(obj)
     #     return get_base64_image(image_path)
-
+    profile_avatar = DocumentSerializer(many=True)
     class Meta:
         model = UserProfile
         fields = (
-            'id', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'emergency_contact_name', 'emergency_phone_number', 'username',
+            'id','profile_avatar', 'display_name', 'state', 'city', 'address', 'country', 'zip_code', 'email', 'phone_number', 'emergency_contact_name', 'emergency_phone_number', 'username',
             'date_of_birth', 'gender', 'pronouns', 'custom_pronoun', 'invitation_key', 'user_name', 'full_name', 'user_id')
 
     def update(self, instance, validated_data):

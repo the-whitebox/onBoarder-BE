@@ -107,7 +107,7 @@ class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     @transaction.atomic
-    def post(self, *args, **kwargs):
+    def post(self,request, *args, **kwargs):
         try:
             username = self.request.data.get('username')
             email = self.request.data.get('email')
@@ -120,11 +120,16 @@ class UserRegistartionView(APIView):
                 LOG.error('User Role Does not exist for: %s' % username)
                 return Response({'error': 'profile_not_found'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            
             user = User.objects.create(email=email, role=role, username=username, profile=user_profile)
             password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
             user.set_password(password)
             user.save()
-
+            if user:
+                myuser = UserProfile.objects.get(user=user)
+                d = Document.objects.create(content_object=myuser, image=request.FILES['image'])
+                # return Response("image saved")
             email_sent = send_mail(
                 'Your MaxPilot login details',
                 f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
@@ -241,7 +246,6 @@ class ImageProfile(APIView):
         myuser = UserProfile.objects.get(user=request.user)
         print(myuser)
         img = Document.objects.create(content_object=myuser, image=request.FILES['image'])
-        img.image
         print(img)
         return Response("IMage Saved")
     def get(self,request):
