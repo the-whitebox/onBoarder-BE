@@ -42,8 +42,6 @@ class DocumentSerializer(serializers.ModelSerializer):
             'object_id',
         ]
 
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField(read_only=True)
     # # relative_profile_avatar = serializers.SerializerMethodField(read_only=True)

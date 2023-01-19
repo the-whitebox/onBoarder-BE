@@ -126,10 +126,14 @@ class UserRegistartionView(APIView):
             password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
             user.set_password(password)
             user.save()
-            if user:
-                myuser = UserProfile.objects.get(user=user)
-                d = Document.objects.create(content_object=myuser, image=request.FILES['image'])
-                # return Response("image saved")
+            try:
+                if request.FILES['image'] is not None:
+                    print(request.FILES['image'])
+                    myuser = UserProfile.objects.get(user=user)
+                    Document.objects.create(content_object=myuser, image=request.FILES['image'])
+                        # return Response("image saved")
+            except:
+                pass
             email_sent = send_mail(
                 'Your MaxPilot login details',
                 f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
@@ -137,7 +141,6 @@ class UserRegistartionView(APIView):
                 [email],
                 fail_silently = False,
             )
-
             return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
@@ -240,15 +243,3 @@ class EnumsReturn(viewsets.ModelViewSet):
         if self.request.GET.get('group',None):
             return ENUMS.objects.filter(group=self.request.GET.get('group'))
         return queryset
-
-class ImageProfile(APIView):
-    def post(self,request):
-        myuser = UserProfile.objects.get(user=request.user)
-        print(myuser)
-        img = Document.objects.create(content_object=myuser, image=request.FILES['image'])
-        print(img)
-        return Response("IMage Saved")
-    def get(self,request):
-        img = UserProfile.objects.filter(user=request.user, profile_avatar=request.FILES['image'])
-        print(img)
-        return Response("Profile Avatar")
