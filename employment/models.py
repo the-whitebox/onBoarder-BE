@@ -2,10 +2,10 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from decimal import Decimal
 from accounts.models import User
-from deputy.models import DeputyBaseModel
+from MaxPilot.models import MaxPilotBaseModel
 
 # Create your models here.
-class UserWorkDetail(DeputyBaseModel):
+class UserWorkDetail(MaxPilotBaseModel):
     user = models.OneToOneField(User, related_name='work_detail', on_delete=models.CASCADE)
     works_at = models.CharField(max_length=255, null=True,blank=True)
     hired_on = models.DateField(null=True,blank=True)
@@ -13,7 +13,7 @@ class UserWorkDetail(DeputyBaseModel):
     def __str__(self):
         return self.user.email
 
-class HourlyPayRate(DeputyBaseModel):
+class HourlyPayRate(MaxPilotBaseModel):
     weekday_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     saturday_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     sunday_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
@@ -22,14 +22,14 @@ class HourlyPayRate(DeputyBaseModel):
     def __int__(self):
         return self.id
 
-class HourlyOneAndHalfOvertimePayRate(DeputyBaseModel):
+class HourlyOneAndHalfOvertimePayRate(MaxPilotBaseModel):
     hourly_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     overtime_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
 
     def __int__(self):
         return self.id
 
-class SalaryPayRate(DeputyBaseModel):
+class SalaryPayRate(MaxPilotBaseModel):
     salary_period = models.PositiveIntegerField(null=True,blank=True)
     salary_amount = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     salary_cost_allocation = models.PositiveIntegerField(null=True,blank=True)
@@ -37,20 +37,20 @@ class SalaryPayRate(DeputyBaseModel):
     def __int__(self):
         return self.id
 
-class FixedPayRate(DeputyBaseModel):
+class FixedPayRate(MaxPilotBaseModel):
     base_fixed_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
 
     def __int__(self):
         return self.id
 
-class HourlyFortyFourHourOvertimePayRate(DeputyBaseModel):
+class HourlyFortyFourHourOvertimePayRate(MaxPilotBaseModel):
     base_hourly_rate = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     weekly_ot = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
 
     def __int__(self):
         return self.id
 
-class PerDayPayRate(DeputyBaseModel):
+class PerDayPayRate(MaxPilotBaseModel):
     monday = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     tuesday = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
     wednesday = models.DecimalField(max_digits=15,decimal_places=4,default=0,validators=[MinValueValidator(Decimal('0.01'))])
@@ -63,7 +63,7 @@ class PerDayPayRate(DeputyBaseModel):
     def __int__(self):
         return self.id
 
-class UserPayDetail(DeputyBaseModel):
+class UserPayDetail(MaxPilotBaseModel):
     user = models.OneToOneField(User, related_name='pay_detail', on_delete=models.CASCADE)
     employment_type = models.PositiveIntegerField(null=True,blank=True)
     pay_rates = models.PositiveIntegerField(null=True,blank=True)
@@ -78,7 +78,7 @@ class UserPayDetail(DeputyBaseModel):
     def __str__(self):
         return self.user.email
 
-class WorkPeriod(DeputyBaseModel):
+class WorkPeriod(MaxPilotBaseModel):
     work_period_length = models.PositiveIntegerField(null=True,blank=True)
     next_work_period_day = models.CharField(max_length=255,null=True,blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -86,7 +86,7 @@ class WorkPeriod(DeputyBaseModel):
     def __int__(self):
         return self.id
 
-class UserWorkingHours(DeputyBaseModel):
+class UserWorkingHours(MaxPilotBaseModel):
     user = models.OneToOneField(User, related_name='working_hours', on_delete=models.CASCADE)
     work_period = models.OneToOneField(WorkPeriod, on_delete=models.CASCADE, null=True, blank=True)
     hours_per_work_period = models.PositiveIntegerField(null=True,blank=True)
@@ -97,7 +97,7 @@ class UserWorkingHours(DeputyBaseModel):
     def __str__(self):
         return self.user.email
 
-class UserLeaveEntitlements(DeputyBaseModel):
+class UserLeaveEntitlements(MaxPilotBaseModel):
     user = models.ForeignKey(User, related_name='leave_entitlements', on_delete=models.CASCADE)
     leave_entitlement = models.PositiveIntegerField(null=True,blank=True)
 

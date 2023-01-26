@@ -1,7 +1,7 @@
 from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
-from deputy.models import DeputyBaseModel
+from MaxPilot.models import MaxPilotBaseModel
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.contrib.contenttypes.models import ContentType
@@ -11,13 +11,13 @@ from business.models import Business
 
 # Create your models here.
 
-class Document(DeputyBaseModel):
+class Document(MaxPilotBaseModel):
     image = models.ImageField(upload_to='images/', blank=True, null=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-class ENUMS(DeputyBaseModel):
+class ENUMS(MaxPilotBaseModel):
     name = models.CharField(max_length=450, null=True,blank=True)
     reference_id = models.PositiveIntegerField(null=True, blank=True)
     group = models.CharField(max_length=255, null=True,blank=True)
@@ -25,7 +25,7 @@ class ENUMS(DeputyBaseModel):
     def __str__(self):
         return str(self.name)
 
-class UserProfile(DeputyBaseModel):
+class UserProfile(MaxPilotBaseModel):
 
     # NOT_SPECIFIED = "Not Specified"
     # MALE = "Male"
@@ -80,7 +80,7 @@ class UserProfile(DeputyBaseModel):
 #     else:
 #         pass
 
-class Role(DeputyBaseModel):
+class Role(MaxPilotBaseModel):
 
     SYSTEM_ADMINISTRATOR = "System Administrator"
     SUPERVISOR = "Supervisor"
@@ -101,7 +101,7 @@ class Role(DeputyBaseModel):
     def __str__(self):
         return self.role
 
-class User(AbstractUser, DeputyBaseModel):
+class User(AbstractUser, MaxPilotBaseModel):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(_('email address'), unique=True)
 
