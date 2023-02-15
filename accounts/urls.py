@@ -13,14 +13,16 @@ from accounts.views import (
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
     InvitationLinkView,CsvReader,
-    CsvNewUsers,EnumsReturn
+    CsvNewUsers,EnumsReturn,RoleViewSet
 )
 
 router = routers.DefaultRouter()
 router.register(r'people', UserViewSet, basename='user')
 router.register(r'user_profiles', UserProfileViewSet)
 router.register(r'enums', ENUMSViewSet, basename='enums')
-router.register(r'EnumsReturn', EnumsReturn)
+router.register(r'role', RoleViewSet, basename='role')
+
+# router.register(r'EnumsReturn', EnumsReturn)
 
 
 urlpatterns = [
@@ -49,6 +51,6 @@ urlpatterns = [
     # path('upload/', UploadFileView.as_view(), name='upload-file'),
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
-
+    path('EnumsReturn/', EnumsReturn.as_view(), name='EnumsReturn')
 
 ]

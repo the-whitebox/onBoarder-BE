@@ -20,7 +20,7 @@ from accounts.models import (
     )
 from accounts.serializers import (
     UserSerializer, UserProfileSerializer,
-    ENUMSerializer
+    ENUMSerializer,RoleSerializer
     )
 
 # from accounts.permissions import IsLoggedInUserOrAdmin, IsAdminUser
@@ -234,12 +234,30 @@ class CsvNewUsers(APIView):
 
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
 
-class EnumsReturn(viewsets.ModelViewSet):
-    queryset = ENUMS.objects.all()
-    serializer_class = ENUMSerializer
+# class EnumsReturn(viewsets.ModelViewSet):
+#     queryset = ENUMS.objects.all()
+#     serializer_class = ENUMSerializer
 
-    def get_queryset(self):
-        queryset = super(EnumsReturn, self).get_queryset()
-        if self.request.GET.get('group',None):
-            return ENUMS.objects.filter(group=self.request.GET.get('group'))
-        return queryset
+#     def get_queryset(self):
+#         queryset = super(EnumsReturn, self).get_queryset()
+#         group = self.request.GET.get('group',None)
+#         if group:
+#             return ENUMS.objects.filter(group=group)
+#         else:
+#             return queryset
+class EnumsReturn(APIView):
+    def get(self,request ,*args, **kwargs):
+        group = self.request.GET.get('group',None)
+        all_data=[]
+        if group:
+            data = ENUMS.objects.filter(group=group)
+            for d in data:
+                response = {"name":d.name, "reference_id":d.reference_id, "group":d.group}
+                all_data.append(response)
+            return Response(all_data, status.HTTP_200_OK)
+        else:
+            return Response({'Message': "Parameters missing"}, status.HTTP_400_BAD_REQUEST)
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer

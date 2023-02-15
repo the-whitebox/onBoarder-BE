@@ -47,7 +47,7 @@ class UserProfile(MaxPilotBaseModel):
 
 
     # profile_avatar = models.ImageField(upload_to='profile_avatars/', blank=True, null=True)
-    profile_avatar = GenericRelation(Document, related_query_name='user_profile')
+    profile_avatar = GenericRelation(Document, related_query_name='user_profile', blank=True, null=True)
 
     display_name = models.CharField(_('full name'), max_length=150, blank=True)
     full_name = models.CharField(max_length=70, blank=True, null=True)
@@ -105,7 +105,7 @@ class User(AbstractUser, MaxPilotBaseModel):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(_('email address'), unique=True)
 
-    profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
 
