@@ -78,7 +78,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # def get_encoded_profile_avatar(obj):
     #     image_path = UserProfileSerializer.get_relative_path_profile_avatar(obj)
     #     return get_base64_image(image_path)
-    profile_avatar = DocumentSerializer(many=True)
+    profile_avatar = DocumentSerializer(many=True, required=False)
     class Meta:
         model = UserProfile
         fields = (
@@ -306,6 +306,25 @@ class ENUMSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'reference_id', 'group'
             )
+
+
+
+# class ChoicesField(serializers.Field):
+#     def __init__(self, choices, **kwargs):
+#         self._choices = choices
+#         super(ChoicesField, self).__init__(**kwargs)
+
+#     def to_representation(self, obj):
+#         return self._choices[obj]
+
+#     def to_internal_value(self, data):
+#         return getattr(self._choices, data)
+
+class RoleSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=Role.ROLE_CHOICES)
+    class Meta:
+        model = Role
+        fields = ('role',)
 
 
 class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
