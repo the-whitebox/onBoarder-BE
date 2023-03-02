@@ -102,12 +102,12 @@ class Role(MaxPilotBaseModel):
         return self.role
 
 class User(AbstractUser, MaxPilotBaseModel):
-    username = models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True, null=True)
     email = models.EmailField(_('email address'), unique=True)
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
+    business = models.ManyToManyField(Business, related_name='users', blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']

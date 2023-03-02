@@ -150,6 +150,21 @@ class UserRegistartionView(APIView):
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class InvitationLinkView(APIView):
+    def get(self, *args, **kwargs):
+        try:
+            try:
+                user = User.objects.get(pk=self.request.user.id)
+            except User.DoesNotExist:
+                LOG.error('User Does not exist')
+                return Response({'error': 'user_not_found'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            unique_id = user.profile.invitation_key
+            return Response({'invitation_link': f'http://127.0.0.1:8000/{unique_id}'}, status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': 'Link is not created'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def post(self, *args, **kwargs):
         try:
             try:
