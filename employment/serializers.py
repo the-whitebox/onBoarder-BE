@@ -167,10 +167,10 @@ class UserWorkingHoursSerializer(serializers.ModelSerializer):
         
         return instance
     
-    def to_internal_value(self, data):
-        self.fields['work_period'] = serializers.PrimaryKeyRelatedField(
-            queryset=WorkPeriod.objects.all())
-        return super(UserWorkingHoursSerializer, self).to_internal_value(data)
+    # def to_internal_value(self, data):
+    #     self.fields['work_period'] = serializers.PrimaryKeyRelatedField(
+    #         queryset=WorkPeriod.objects.all())
+    #     return super(UserWorkingHoursSerializer, self).to_internal_value(data)
 
 class UserLeaveEntitlementsSerializer(serializers.ModelSerializer):
     class Meta:

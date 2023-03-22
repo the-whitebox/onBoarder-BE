@@ -106,7 +106,7 @@ class User(AbstractUser, MaxPilotBaseModel):
     email = models.EmailField(_('email address'), unique=True)
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True,blank=True)
     business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
