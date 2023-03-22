@@ -291,8 +291,15 @@ class UserSerializer(serializers.ModelSerializer):
             working_hours.save()
             
         if leave_entitlements_data:
-            leave_entitlements.leave_entitlement = leave_entitlements_data.get('leave_entitlement', leave_entitlements.leave_entitlement)
-            leave_entitlements.save()
+            for leave_entitlement_data in leave_entitlements_data:
+                leave_entitlement_id = leave_entitlement_data.get('id')
+                try:
+                    leave_entitlement = leave_entitlements.get(id=leave_entitlement_id)
+                    leave_entitlement.leave_entitlement = leave_entitlement_data.get('leave_entitlement', leave_entitlement.leave_entitlement)
+                    leave_entitlement.save()
+                except UserLeaveEntitlements.DoesNotExist:
+                    # Handle case where specified id does not exist
+                    pass
 
         return instance
     
