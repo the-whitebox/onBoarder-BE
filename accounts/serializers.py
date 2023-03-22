@@ -170,7 +170,7 @@ class UserSerializer(serializers.ModelSerializer):
         per_day_pay_rate=per_day_pay_rate)
         work_period = WorkPeriod.objects.create(user=user)
         working_hours = UserWorkingHours.objects.create(work_period=work_period, user=user)
-        # leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
+        leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
 
         profile.save()
 
@@ -289,9 +289,10 @@ class UserSerializer(serializers.ModelSerializer):
                 working_hours.work_period.save()
 
             working_hours.save()
-        
-        # if leave_entitlements_data:
-
+            
+        if leave_entitlements_data:
+            leave_entitlements.leave_entitlement = leave_entitlements_data.get('leave_entitlement', leave_entitlements.leave_entitlement)
+            leave_entitlements.save()
 
         return instance
     
