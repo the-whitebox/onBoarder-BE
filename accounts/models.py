@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from business.models import Business
+from business.models import Business,Location
 
 
 # Create your models here.
@@ -108,6 +108,8 @@ class User(AbstractUser, MaxPilotBaseModel):
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True,blank=True)
     business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
+    user_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']

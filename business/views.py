@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from business.models import Business
-from business.serializers import BusinessSerializer
+from business.models import Business,Location
+from business.serializers import BusinessSerializer,LocationSerializer
 from rest_framework import (
     viewsets, views,
     status, permissions
@@ -13,3 +13,8 @@ class BusinessRegistrationViewSet(viewsets.ModelViewSet):
 
     # def perform_create(self, serializer):
     #     return serializer.save(user = self.request.user)
+
+
+class BusinessLocation(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
