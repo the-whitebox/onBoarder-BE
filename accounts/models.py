@@ -103,6 +103,7 @@ class Role(MaxPilotBaseModel):
 
 class User(AbstractUser, MaxPilotBaseModel):
     username = models.CharField(max_length=50, unique=True, null=True)
+    username = models.CharField(max_length=50, unique=True, null=True)
     email = models.EmailField(_('email address'), unique=True)
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
