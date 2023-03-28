@@ -130,7 +130,7 @@ class UserSerializer(serializers.ModelSerializer):
         depth = 0
         model = User
         fields = (
-            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business', 'password', 'username',
+            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business','user_location', 'password', 'username',
             'email', 'user_status', 'is_active', 'profile', 'work_detail', 'pay_detail', 'working_hours', 'leave_entitlements'
         )
         # read_only_fields = ('groups', )
@@ -178,7 +178,7 @@ class UserSerializer(serializers.ModelSerializer):
         per_day_pay_rate=per_day_pay_rate)
         work_period = WorkPeriod.objects.create(user=user)
         working_hours = UserWorkingHours.objects.create(work_period=work_period, user=user)
-        # leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
+        leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
 
         profile.save()
 
@@ -297,9 +297,17 @@ class UserSerializer(serializers.ModelSerializer):
                 working_hours.work_period.save()
 
             working_hours.save()
-        
-        # if leave_entitlements_data:
-
+            
+        if leave_entitlements_data:
+            for leave_entitlement_data in leave_entitlements_data:
+                leave_entitlement_id = leave_entitlement_data.get('id')
+                try:
+                    leave_entitlement = leave_entitlements.get(id=leave_entitlement_id)
+                    leave_entitlement.leave_entitlement = leave_entitlement_data.get('leave_entitlement', leave_entitlement.leave_entitlement)
+                    leave_entitlement.save()
+                except UserLeaveEntitlements.DoesNotExist:
+                    # Handle case where specified id does not exist
+                    pass
 
         return instance
     

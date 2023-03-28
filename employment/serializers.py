@@ -141,6 +141,7 @@ class WorkPeriodSerializer(serializers.ModelSerializer):
             )
 
 class UserWorkingHoursSerializer(serializers.ModelSerializer):
+    work_period = WorkPeriodSerializer(required=False)
     class Meta:
         model = UserWorkingHours
         fields = (
@@ -149,18 +150,27 @@ class UserWorkingHoursSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
 
+        work_period_data = validated_data.pop('work_period')
+        work_period = instance.work_period
+
         instance.hours_per_work_period = validated_data.get('hours_per_work_period', instance.hours_per_work_period)
         instance.total_hours_for_work_period = validated_data.get('total_hours_for_work_period', instance.total_hours_for_work_period)
         instance.pay_overtime = validated_data.get('pay_overtime', instance.pay_overtime)
         instance.stress_level = validated_data.get('stress_level', instance.stress_level)
         instance.save()
+
+        # Update the attributes of the work_period model on the nested instance
+        if work_period_data:
+            work_period.work_period_length = work_period_data.get('work_period_length', work_period.work_period_length)
+            work_period.next_work_period_day = work_period_data.get('next_work_period_day', work_period.next_work_period_day)
+            work_period.save()
         
         return instance
     
-    def to_internal_value(self, data):
-        self.fields['work_period'] = serializers.PrimaryKeyRelatedField(
-            queryset=WorkPeriod.objects.all())
-        return super(UserWorkingHoursSerializer, self).to_internal_value(data)
+    # def to_internal_value(self, data):
+    #     self.fields['work_period'] = serializers.PrimaryKeyRelatedField(
+    #         queryset=WorkPeriod.objects.all())
+    #     return super(UserWorkingHoursSerializer, self).to_internal_value(data)
 
 class UserLeaveEntitlementsSerializer(serializers.ModelSerializer):
     class Meta:

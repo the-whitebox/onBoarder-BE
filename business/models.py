@@ -18,6 +18,26 @@ class Business(MaxPilotBaseModel):
         return str(self.business_name)
 
 
+class Location(MaxPilotBaseModel):
+    location_name = models.CharField(max_length=200)
+    location_address = models.CharField(max_length=500, default=None)
+    timezone = models.CharField(max_length=50, default='Asia/karachi')
+    location_week_starts_on = models.PositiveIntegerField()    
+    business_location = models.ForeignKey(Business, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.location_week_starts_on)
+    
+class Area(MaxPilotBaseModel):
+    physical_address = models.BooleanField(default=False,null=True,blank=True)
+    area_of_work = models.CharField(max_length=50,null=True,blank=True)
+    address = models.CharField(max_length=500,null=True,blank=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        return str(self.area_of_work)
+
+
+
 # HEALTHCARE = "Healthcare"
     # RETAIL_HOSPITALITY = "Retail & Hospitality"
     # SERVICES = "Services"
