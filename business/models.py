@@ -1,6 +1,7 @@
 from django.db import models
 from MaxPilot.models import MaxPilotBaseModel
-
+from django.core.exceptions import ValidationError
+from datetime import datetime
 # Create your models here.
 class Business(MaxPilotBaseModel):
 
@@ -34,7 +35,36 @@ class Area(MaxPilotBaseModel):
     address = models.CharField(max_length=500,null=True,blank=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
-        return str(self.area_of_work)
+        return self.area_of_work
+
+
+class OperatingHours(MaxPilotBaseModel):
+    Monday = "Monday"
+    Tuesday = "Tuesday"
+    Wednesday = "Wednesday"
+    Thursday = "Thursday"
+    Friday = "Friday"
+    Saturday = "Saturday"
+    Sunday = "Sunday"
+
+    DAYS_OF_WEEK = (
+        (Monday, 'Monday'),
+        (Tuesday, 'Tuesday'),
+        (Wednesday, 'Wednesday'),
+        (Thursday, 'Thursday'),
+        (Friday, 'Friday'),
+        (Saturday, 'Saturday'),
+        (Sunday, 'Sunday'),
+    )
+
+    days = models.CharField(max_length=9, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField(default='09:00')
+    end_time = models.TimeField(default='05:00')
+    def clean(self):
+        if self.end_time <= self.start_time:
+            raise ValidationError('End time must be after start time.')
+    is_closed = models.BooleanField(default=False)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
 
 
 

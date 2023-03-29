@@ -177,7 +177,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
         
     def update(self, instance, validated_data):
-        profile_data = validated_data.pop('profile')
+        profile_data = validated_data.pop('profile', None)
         work_detail_data = validated_data.pop('work_detail', None)
         pay_detail_data = validated_data.pop('pay_detail', None)
         working_hours_data = validated_data.pop('working_hours', None)
