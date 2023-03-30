@@ -21,13 +21,18 @@ class Business(MaxPilotBaseModel):
 
 class Location(MaxPilotBaseModel):
     location_name = models.CharField(max_length=200)
+    location_code = models.CharField(max_length=3, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.location_code = self.location_name[:3].upper() + "_suffix"
+        super(Location, self).save(*args, **kwargs)
     location_address = models.CharField(max_length=500, default=None)
     timezone = models.CharField(max_length=50, default='Asia/karachi')
     location_week_starts_on = models.PositiveIntegerField()    
     business_location = models.ForeignKey(Business, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return str(self.location_week_starts_on)
+        return str(self.location_name)
     
 class Area(MaxPilotBaseModel):
     physical_address = models.BooleanField(default=False,null=True,blank=True)

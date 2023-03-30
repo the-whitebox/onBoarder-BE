@@ -30,6 +30,7 @@ from django.db import transaction
 from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
+from rest_framework.decorators import authentication_classes, permission_classes
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -83,7 +84,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     #     elif self.action == 'list' or self.action == 'destroy':
     #         permission_classes = [IsAdminUser]
     #     return [permission() for permission in permission_classes]
-
+@authentication_classes([])
+@permission_classes([])
 class ENUMSViewSet(viewsets.ModelViewSet):
     queryset = ENUMS.objects.all()
     serializer_class = ENUMSerializer
@@ -140,6 +142,7 @@ class UserRegistartionView(APIView):
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
+
             )
             return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             

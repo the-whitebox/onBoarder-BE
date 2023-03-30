@@ -182,7 +182,7 @@ class UserSerializer(serializers.ModelSerializer):
         pay_detail_data = validated_data.pop('pay_detail', None)
         working_hours_data = validated_data.pop('working_hours', None)
         leave_entitlements_data = validated_data.pop('leave_entitlements', None)
-
+        print(instance.leave_entitlements)
         profile = instance.profile
         work_detail = instance.work_detail
         pay_detail = instance.pay_detail
