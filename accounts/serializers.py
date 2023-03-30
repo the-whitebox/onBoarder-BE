@@ -5,7 +5,6 @@ from accounts.models import (
     UserProfile, ENUMS,
     Role, Document
 )
-from business.models import Business
 from employment.serializers import (
     UserWorkDetailSerializer, UserPayDetailSerializer,
     UserWorkingHoursSerializer, UserLeaveEntitlementsSerializer
@@ -124,7 +123,6 @@ class UserSerializer(serializers.ModelSerializer):
     working_hours = UserWorkingHoursSerializer(required=False)
     leave_entitlements = UserLeaveEntitlementsSerializer(required=False, many=True)
     user_status = serializers.SerializerMethodField(read_only=True)
-    business = serializers.PrimaryKeyRelatedField(many=True, queryset=Business.objects.all())
     
     class Meta:
         depth = 0
@@ -147,8 +145,6 @@ class UserSerializer(serializers.ModelSerializer):
         profile_data = validated_data.pop('profile',)
         profile = UserProfile.objects.create(**profile_data)
 
-        businesses_data = validated_data.pop('business')
-
         # work_detail_data = validated_data.pop('work_detail')
         # pay_detail_data = validated_data.pop('pay_detail')
         # working_hours_data = validated_data.pop('working_hours')
@@ -161,10 +157,6 @@ class UserSerializer(serializers.ModelSerializer):
         if user.is_superuser:
             user.is_staff = True
         user.save()
-        
-        for business_data in businesses_data:
-            user.business.set([business_data])
-            # business_data.users.add(user) # set the reverse relationship as well
 
         work_detail = UserWorkDetail.objects.create(user=user)
         hourly_pay_rate = HourlyPayRate.objects.create()
