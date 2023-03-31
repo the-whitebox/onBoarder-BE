@@ -24,12 +24,12 @@ class Location(MaxPilotBaseModel):
     location_code = models.CharField(max_length=3, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        self.location_code = self.location_name[:3].upper() + "_suffix"
+        self.location_code = self.location_name[:3].upper()
         super(Location, self).save(*args, **kwargs)
     location_address = models.CharField(max_length=500, default=None)
     timezone = models.CharField(max_length=50, default='Asia/karachi')
     location_week_starts_on = models.PositiveIntegerField()    
-    business_location = models.ForeignKey(Business, on_delete=models.CASCADE, null=True, blank=True)
+    business_location = models.ForeignKey(Business,related_name='business_location', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.location_name)
@@ -38,7 +38,7 @@ class Area(MaxPilotBaseModel):
     physical_address = models.BooleanField(default=False,null=True,blank=True)
     area_of_work = models.CharField(max_length=50,null=True,blank=True)
     address = models.CharField(max_length=500,null=True,blank=True)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
+    location = models.ForeignKey(Location,related_name='area_location', on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.area_of_work
 
@@ -69,7 +69,7 @@ class OperatingHours(MaxPilotBaseModel):
         if self.end_time <= self.start_time:
             raise ValidationError('End time must be after start time.')
     is_closed = models.BooleanField(default=False)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location,related_name='operating_hours_location', on_delete=models.CASCADE)
 
 
 

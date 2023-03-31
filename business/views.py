@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from accounts.models import User
 from business.models import Business,Location,Area,OperatingHours
-from business.serializers import BusinessSerializer,LocationSerializer
+from business.serializers import BusinessSerializer,LocationSerializer,OperatingHourSerializer
 from rest_framework import (
     viewsets, views,
     status, permissions
@@ -25,38 +25,65 @@ class BusinessLocation(viewsets.ModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
 
-    def update(self, request, *args, **kwargs):
-            partial = kwargs.pop('partial', False)
-            instance = self.get_object()
-            print(instance)
-            area_list = request.data.get('area')
-
-            # iterate over each dictionary in the list and update it
-            for item in area_list:
-                # item_instance = Area.objects.get(area_of_work=item['area_of_work'])
-                physical_address = item['physical_address']
-                area_of_work = item['area_of_work']
-                address = item['address']
-
-                Area.objects.create(physical_address=physical_address,area_of_work=area_of_work,address=address)
-
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
-            print(serializer.is_valid())
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-            return Response(serializer.data)
-    
-
-class CopySettings(APIView):
-     def post(self, request):
+    def patch(self, request, *args, **kwargs):
         source_id = request.data.get('source_id')
-        print(source_id)
         destination_ids = request.data.get('destination_ids')
-        print(destination_ids)
-
-        operating_hours = OperatingHours.objects.get(id=source_id)
+        location = Location.objects.get(id=source_id)
+        operating_hours = OperatingHours.objects.filter(location=location)
         for id in destination_ids:
-            destination = Location.objects.get(id)
-            destination.operating_hours = operating_hours
+            location = Location.objects.get(id=id)
+            operating_hour = location.operating_hours_location
+            related_objects = operating_hour.all()
+
+            for hours in operating_hours:
+                for related_obj in related_objects:
+                    related_obj.days = hours.days
+                    related_obj.start_time = hours.start_time
+                    related_obj.end_time = hours.end_time
+                    related_obj.is_closed = hours.is_closed
+                    related_obj.save()
+
+        return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
+
+
+
+class DuplicateSettings(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Get the ID of the instance to duplicate
+        id = request.data.get('id', None)
+        print(id)
+
+        # Get the instance to duplicate
+        location = Location.objects.get(id=id)
+        area = location.area_location
+        people = location.user_location
+        operating_hours = location.operating_hours_location
         
-            return destination
+        print(area)
+        # Create a new instance as a duplicate of the existing instance
+        new_instance = Location.objects.create(
+            location_name=request.data.get('name', None),
+            location_code=location.location_code,
+            location_address=location.location_address,
+            timezone=location.timezone,
+            location_week_starts_on=location.location_week_starts_on,
+            business_location=location.business_location,
+
+
+            physical_address=area.physical_address,
+            area_of_work=area.area_of_work,
+            address=area.address,
+            people=people.people,
+            is_closed=operating_hours.is_closed,
+            days=operating_hours.days,
+            start_time=operating_hours.start_time,
+            end_time=operating_hours.end_time,
+            location=operating_hours.location,
+        )
+        new_instance.save()
+        # Return the response with the serialized data of the new instance
+        serializer = self.get_serializer(new_instance)
+        return Response(serializer.data)

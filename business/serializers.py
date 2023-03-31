@@ -74,36 +74,57 @@ class LocationSerializer(serializers.ModelSerializer):
         data = super().to_representation(data)
         return data
     
-    # def update(self, instance, validated_data):
-    #     # areas_data = validated_data.pop('area',None)
-    #     # users_data = validated_data.pop('people',None)
-    #     operating_hours_data = validated_data.pop('operating_hours', None)
-    #     print(operating_hours_data)
-    #     # print(instance)
-    #     # area = instance.area
-    #     # users = instance.users
-    #     print(instance.area)
-    #     operating_hours = instance.operating_hours
-    #     print(operating_hours)
-    #     # if areas_data:
-    #     #     area = Area.objects.get_or_create(**areas_data)[0]
-    #     #     instance.area = area
-    #     # return super().update(instance, validated_data)
+    def update(self, instance, validated_data):
+        areas_data = validated_data.pop('area',None)
+        users_data = validated_data.pop('people',None)
+        operating_hours_data = validated_data.pop('operating_hours', None)
 
-    #     # if areas_data:
-    #     #     area.physical_address = areas_data.get('physical_address', area.physical_address)
-    #     #     area.area_of_work = areas_data.get('area_of_work', area.area_of_work)
-    #     #     area.address = areas_data.get('address', area.address)
-    #     #     area.save()
-    #     # if users_data:
-    #     #     users.location_name = users_data.get('location_name', users.location_name)
-    #     #     users.location_address = users_data.get('location_address', users.location_address)
-    #     #     users.timezone = users_data.get('timezone', users.timezone)
-    #     #     users.location_week_starts_on = users_data.get('location_week_starts_on', users.location_week_starts_on)
-    #     #     users.save()
-    #     if operating_hours_data:
-    #         operating_hours.days = operating_hours_data.get('days', operating_hours.days)
-    #         operating_hours.start = operating_hours_data.get('start_time', operating_hours.start)
-    #         operating_hours.end = operating_hours_data.get('end_time', operating_hours.end)
-    #         operating_hours.is_closed = operating_hours_data.get('is_closed', operating_hours.is_closed)
-    #         operating_hours.save()
+        area = instance.area_location
+        users = instance.user_location
+        operating_hours = instance.operating_hours_location
+
+        instance.location_name = validated_data.get('location_name', instance.location_name)
+        instance.location_code = validated_data.get('location_code', instance.location_code)
+        instance.location_address = validated_data.get('location_address', instance.location_address)
+        instance.timezone = validated_data.get('timezone', instance.timezone)
+        instance.location_week_starts_on = validated_data.get('location_week_starts_on', instance.location_week_starts_on)
+        
+        related_objects = area.all()
+        for related_obj in related_objects:
+            if areas_data:
+                for areas in areas_data:
+                    related_obj.physical_address = areas.get('physical_address', related_obj.physical_address)
+                    related_obj.area_of_work = areas.get('area_of_work', related_obj.area_of_work)
+                    related_obj.address = areas.get('address', related_obj.address)
+                    related_obj.save()
+        if users_data:
+            for userss in users_data:
+                users.location_name = userss.get('location_name', users.location_name)
+                users.location_address = userss.get('location_address', users.location_address)
+                users.timezone = userss.get('timezone', users.timezone)
+                users.location_week_starts_on = userss.get('location_week_starts_on', users.location_week_starts_on)
+                users.save()
+
+        if operating_hours_data:
+            related_objects = operating_hours.all()
+            for related_obj in related_objects:
+                related_obj.days = operating_hours_data.get('days', related_obj.days)
+                related_obj.start_time = operating_hours_data.get('start_time', related_obj.start_time)
+                related_obj.end_time = operating_hours_data.get('end_time', related_obj.end_time)
+                related_obj.is_closed = operating_hours_data.get('is_closed', related_obj.is_closed)
+                related_obj.save()
+        
+        return instance
+
+
+# class CopySettingsSerializer(serializers.ModelSerializer):
+#     operating_hours = OperatingHourSerializer(required=False)
+
+#     class Meta:
+#         depth = 0
+#         model = Location
+#         fields = (
+#             'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','operating_hours'
+#             )
+
+#     def update(self, instance, validated_data):
