@@ -45,45 +45,65 @@ class BusinessLocation(viewsets.ModelViewSet):
 
         return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
 
-
-
-class DuplicateSettings(viewsets.ModelViewSet):
+class DuplicateSettings(APIView):
     queryset = Location.objects.all()
-    serializer_class = LocationSerializer
+    serializer_class = LocationSerializer(Location, many=True)
+    # def post(self, request):
+    #     """
+    #     Create a student record
+    #     :param format: Format of the student records to return to
+    #     :param request: Request object for creating student
+    #     :return: Returns a student record
+    #     """
+    #     serializer = LocationSerializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save() 
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request):
         # Get the ID of the instance to duplicate
         id = request.data.get('id', None)
-        print(id)
-
         # Get the instance to duplicate
-        location = Location.objects.get(id=id)
-        area = location.area_location
-        people = location.user_location
-        operating_hours = location.operating_hours_location
-        
-        print(area)
-        # Create a new instance as a duplicate of the existing instance
-        new_instance = Location.objects.create(
-            location_name=request.data.get('name', None),
-            location_code=location.location_code,
-            location_address=location.location_address,
-            timezone=location.timezone,
-            location_week_starts_on=location.location_week_starts_on,
-            business_location=location.business_location,
+        try:
+            location = Location.objects.get(id=id)
+            areas = location.area_location.all()
+            users = location.user_location.all()
+            operating_hours = location.operating_hours_location.all()
+            # Create a new instance as a duplicate of the existing instance
+            new_instance = Location.objects.create(
+                location_name=request.data.get('location_name', None),
+                location_code=location.location_code,
+                location_address=location.location_address,
+                timezone=location.timezone,
+                location_week_starts_on=location.location_week_starts_on,
+                business_location=location.business_location,
+            )
+            if new_instance:
+                for area in areas:
+                    myarea =  Area.objects.create(
+                        physical_address=area.physical_address,
+                        area_of_work=area.area_of_work,
+                        address=area.address,  
+                        location=location
+                    )
+                for people in users:
+                    User.objects.filter(
+                        user_location=people.user_location
+                    )
+                for operating_hour in operating_hours:
+                    hours = OperatingHours.objects.create(
+                        is_closed=operating_hour.is_closed,
+                        days=operating_hour.days,
+                        start_time=operating_hour.start_time,
+                        end_time=operating_hour.end_time,
+                        location=location,
+                    )
 
+        except: 
+            return Response({"Object dublication failed"})
 
-            physical_address=area.physical_address,
-            area_of_work=area.area_of_work,
-            address=area.address,
-            people=people.people,
-            is_closed=operating_hours.is_closed,
-            days=operating_hours.days,
-            start_time=operating_hours.start_time,
-            end_time=operating_hours.end_time,
-            location=operating_hours.location,
-        )
         new_instance.save()
         # Return the response with the serialized data of the new instance
-        serializer = self.get_serializer(new_instance)
-        return Response(serializer.data)
+        # serializer = self.get_serializer(new_instance)
+        # print(serializer)
+        return Response({"Object dublicated successfully"})

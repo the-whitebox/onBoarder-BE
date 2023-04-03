@@ -31,6 +31,8 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from rest_framework.decorators import authentication_classes, permission_classes
+import jwt
+from rest_framework_jwt.utils import jwt_payload_handler
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -105,6 +107,8 @@ class GoogleLogin(SocialLoginView):
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
 
+from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
+import six
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -134,6 +138,7 @@ class UserRegistartionView(APIView):
                     myuser = UserProfile.objects.get(user=user)
                     Document.objects.create(content_object=myuser, image=request.FILES['image'])
                         # return Response("image saved")
+
             except:
                 pass
             email_sent = send_mail(
@@ -144,7 +149,14 @@ class UserRegistartionView(APIView):
                 fail_silently = False,
 
             )
-            return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
+            # Tokens
+            refresh = RefreshToken.for_user(user)
+            access = str(refresh.access_token)
+            tokens = {
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+            return Response({'data': "User created successfully, please check you email for login credentials","tokens": tokens}, status.HTTP_200_OK)
             
         except Exception as e:
             print("message", e)

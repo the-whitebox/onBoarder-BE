@@ -6,10 +6,10 @@ from business.views import BusinessRegistrationViewSet,BusinessLocation,Duplicat
 router = routers.DefaultRouter()
 router.register(r'business', BusinessRegistrationViewSet, basename='business')
 router.register(r'location', BusinessLocation, basename='location')
-router.register(r'duplicate_settings', DuplicateSettings, basename='duplicate_settings')
 
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('duplicate_settings/', DuplicateSettings.as_view(), name='duplicate_settings')
 
 ]

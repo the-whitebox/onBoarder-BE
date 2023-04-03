@@ -117,14 +117,36 @@ class LocationSerializer(serializers.ModelSerializer):
         return instance
 
 
-# class CopySettingsSerializer(serializers.ModelSerializer):
-#     operating_hours = OperatingHourSerializer(required=False)
 
-#     class Meta:
-#         depth = 0
-#         model = Location
-#         fields = (
-#             'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','operating_hours'
-#             )
 
-#     def update(self, instance, validated_data):
+class DuplicateSerializer(serializers.ModelSerializer):
+
+    area = AreaSerializer(required=False,many=True)
+    people = UserSerializer(required=False,many=True)
+    operating_hours = OperatingHourSerializer(required=False)
+
+    class Meta:
+        depth = 0
+        model = Location
+        fields = (
+            'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','area','people','operating_hours'
+            )
+
+    def create(self, validated_data):
+        areas_data = validated_data.pop('area',None)
+        users_data = validated_data.pop('people',None)
+
+        location = Location.objects.create(**validated_data)
+        if areas_data:
+            for data in areas_data:
+                area = Area.objects.create(location=location, **data)
+        if users_data:
+            for data in users_data:
+                people = User.objects.create(user_location=location, **data)
+
+        week_days = ['monday','Tuesday','Wednesday','Thursday','Friday','Satureday','Sunday']
+        for days in week_days:
+            operating_hours = OperatingHours.objects.create(location=location,days=days)
+            print(operating_hours)
+        return location
+
