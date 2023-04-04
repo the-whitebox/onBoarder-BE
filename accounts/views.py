@@ -108,7 +108,6 @@ class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
 
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
-import six
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 

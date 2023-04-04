@@ -37,19 +37,18 @@ class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = (
-            'physical_address', 'area_of_work', 'address',
+            'physical_address', 'area_of_work', 'address', 'location'
             )
 class LocationSerializer(serializers.ModelSerializer):
 
-    area = AreaSerializer(required=False,many=True)
+    areas = AreaSerializer(required=False,many=True)
     people = UserSerializer(required=False,many=True)
-    operating_hours = OperatingHourSerializer(required=False)
+    operating_hours = OperatingHourSerializer(required=False,many=True)
 
     class Meta:
-        depth = 0
         model = Location
         fields = (
-            'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','area','people','operating_hours'
+            'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','areas','people','operating_hours'
             )
 
     def create(self, validated_data):
@@ -69,10 +68,6 @@ class LocationSerializer(serializers.ModelSerializer):
             operating_hours = OperatingHours.objects.create(location=location,days=days)
             print(operating_hours)
         return location
-    
-    def to_representation(self, data):
-        data = super().to_representation(data)
-        return data
     
     def update(self, instance, validated_data):
         areas_data = validated_data.pop('area',None)
