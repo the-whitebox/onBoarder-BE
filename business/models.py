@@ -72,6 +72,20 @@ class OperatingHours(MaxPilotBaseModel):
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
 
 
+class Shift(OperatingHours):
+    user = models.ForeignKey("accounts.User",on_delete=models.CASCADE)
+    area = models.OneToOneField(Area,on_delete=models.CASCADE)
+    start = models.TimeField()
+    finish = models.TimeField()
+
+class Break(MaxPilotBaseModel):
+    break_type = models.CharField(max_length=100, default="Meal break")
+    duration = models.TimeField(default="15")
+    start = models.TimeField()
+    finish = models.TimeField()
+    shift = models.ForeignKey(Shift,related_name='shifts', on_delete=models.CASCADE)
+
+
 
 # HEALTHCARE = "Healthcare"
     # RETAIL_HOSPITALITY = "Retail & Hospitality"

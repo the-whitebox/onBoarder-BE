@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from accounts.models import User
 from business.models import Business,Location,Area,OperatingHours
-from business.serializers import BusinessSerializer,LocationSerializer,OperatingHourSerializer
+from business.serializers import BusinessSerializer,LocationSerializer
+from accounts.serializers import UserSerializer
 from rest_framework import (
     viewsets, views,
     status, permissions
@@ -9,7 +10,7 @@ from rest_framework import (
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import authentication_classes, permission_classes
-
+from employment.models import UserWorkingHours,UserPayDetail
 # Create your views here.
 @authentication_classes([])
 @permission_classes([])
@@ -32,7 +33,7 @@ class BusinessLocation(viewsets.ModelViewSet):
         operating_hours = OperatingHours.objects.filter(location=location)
         for id in destination_ids:
             location = Location.objects.get(id=id)
-            operating_hour = location.operating_hours_location
+            operating_hour = location.operating_hours
             related_objects = operating_hour.all()
 
             for hours in operating_hours:
@@ -48,17 +49,6 @@ class BusinessLocation(viewsets.ModelViewSet):
 class DuplicateSettings(APIView):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer(Location, many=True)
-    # def post(self, request):
-    #     """
-    #     Create a student record
-    #     :param format: Format of the student records to return to
-    #     :param request: Request object for creating student
-    #     :return: Returns a student record
-    #     """
-    #     serializer = LocationSerializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save() 
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def post(self, request):
         # Get the ID of the instance to duplicate
@@ -66,9 +56,11 @@ class DuplicateSettings(APIView):
         # Get the instance to duplicate
         try:
             location = Location.objects.get(id=id)
-            areas = location.area_location.all()
-            users = location.user_location.all()
-            operating_hours = location.operating_hours_location.all()
+            print(location)
+            areas = location.areas.all()
+            print(areas)
+            users = location.people.all()
+            operating_hours = location.operating_hours.all()
             # Create a new instance as a duplicate of the existing instance
             new_instance = Location.objects.create(
                 location_name=request.data.get('location_name', None),
@@ -103,7 +95,51 @@ class DuplicateSettings(APIView):
             return Response({"Object dublication failed"})
 
         new_instance.save()
-        # Return the response with the serialized data of the new instance
-        # serializer = self.get_serializer(new_instance)
-        # print(serializer)
         return Response({"Object dublicated successfully"})
+    
+
+# Schedule Apis
+class SearchMembers(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+
+    def get_queryset(self,):
+        location_id = self.request.GET.get('location_id', None)
+        area = self.request.GET.get('area', None)
+        if location_id:
+            if area:
+                queryset = User.objects.filter(user_location=location_id)
+            # else:
+            #     queryset = User.objects.filter(user_location=location_id)
+            return queryset
+        
+        else:
+            location = Location.objects.all()
+            for data in location:
+                users = User.objects.filter(user_location=data)
+                
+            return users
+
+
+class ShowSchedules(APIView):
+    def get(self,request ,*args, **kwargs):
+        location_id = self.request.data.get('location_id',None)
+        all_members=[]
+        location = Location.objects.get(id=location_id)
+
+        try:
+            if location:
+                users = User.objects.filter(user_location=location)
+            else:
+                users = User.objects.all()
+            for user in users:
+                userworkinghours = UserWorkingHours.objects.get(user=user)
+                stress = userworkinghours.stress_level
+                total_hours = userworkinghours.total_hours_for_work_period
+                base_pay = UserPayDetail.objects.get(user=user).hourly_pay_rate.weekday_rate
+                response = {"username":user.username,"Total hours": total_hours,"Base Pay": base_pay,"Stress":stress}
+                all_members.append(response)
+            return Response(all_members, status.HTTP_200_OK)
+        except:
+            return Response({'Message': "Bad Request"}, status.HTTP_400_BAD_REQUEST)
+
+

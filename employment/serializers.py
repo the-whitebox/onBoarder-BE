@@ -147,7 +147,6 @@ class UserWorkingHoursSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'work_period', 'hours_per_work_period', 'total_hours_for_work_period', 'pay_overtime', 'stress_level', 'user'
             )
-    
     def update(self, instance, validated_data):
 
         work_period_data = validated_data.pop('work_period')

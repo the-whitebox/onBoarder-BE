@@ -4,6 +4,7 @@ from accounts.models import User
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.serializers import UserSerializer
+from employment.serializers import UserWorkingHoursSerializer
 
 class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,9 +53,8 @@ class LocationSerializer(serializers.ModelSerializer):
             )
 
     def create(self, validated_data):
-        areas_data = validated_data.pop('area',None)
+        areas_data = validated_data.pop('areas',None)
         users_data = validated_data.pop('people',None)
-
         location = Location.objects.create(**validated_data)
         if areas_data:
             for data in areas_data:
@@ -62,21 +62,20 @@ class LocationSerializer(serializers.ModelSerializer):
         if users_data:
             for data in users_data:
                 people = User.objects.create(user_location=location, **data)
-
         week_days = ['monday','Tuesday','Wednesday','Thursday','Friday','Satureday','Sunday']
         for days in week_days:
             operating_hours = OperatingHours.objects.create(location=location,days=days)
-            print(operating_hours)
         return location
     
     def update(self, instance, validated_data):
-        areas_data = validated_data.pop('area',None)
+        areas_data = validated_data.pop('areas',None)
         users_data = validated_data.pop('people',None)
         operating_hours_data = validated_data.pop('operating_hours', None)
 
-        area = instance.area_location
-        users = instance.user_location
-        operating_hours = instance.operating_hours_location
+        area = instance.areas
+        users = instance.people
+        operating_hours = instance.operating_hours
+        print(operating_hours)
 
         instance.location_name = validated_data.get('location_name', instance.location_name)
         instance.location_code = validated_data.get('location_code', instance.location_code)
@@ -100,18 +99,17 @@ class LocationSerializer(serializers.ModelSerializer):
                 users.location_week_starts_on = userss.get('location_week_starts_on', users.location_week_starts_on)
                 users.save()
 
-        if operating_hours_data:
-            related_objects = operating_hours.all()
-            for related_obj in related_objects:
-                related_obj.days = operating_hours_data.get('days', related_obj.days)
-                related_obj.start_time = operating_hours_data.get('start_time', related_obj.start_time)
-                related_obj.end_time = operating_hours_data.get('end_time', related_obj.end_time)
-                related_obj.is_closed = operating_hours_data.get('is_closed', related_obj.is_closed)
-                related_obj.save()
+        related_objects = operating_hours.all()
+        for related_obj in related_objects:
+            if operating_hours_data:
+                for operating_hour in operating_hours_data:
+                    related_obj.days = operating_hour.get('days', related_obj.days)
+                    related_obj.start_time = operating_hour.get('start_time', related_obj.start_time)
+                    related_obj.end_time = operating_hour.get('end_time', related_obj.end_time)
+                    related_obj.is_closed = operating_hour.get('is_closed', related_obj.is_closed)
+                    related_obj.save()
         
         return instance
-
-
 
 
 class DuplicateSerializer(serializers.ModelSerializer):
