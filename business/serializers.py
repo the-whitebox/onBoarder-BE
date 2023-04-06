@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from business.models import Business,Location,Area,OperatingHours
+from business.models import Business,Location,Area,OperatingHours,Shift,Break
 from accounts.models import User
 from rest_framework.response import Response
 from rest_framework import status
@@ -114,7 +114,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
 class DuplicateSerializer(serializers.ModelSerializer):
 
-    area = AreaSerializer(required=False,many=True)
+    areas = AreaSerializer(required=False,many=True)
     people = UserSerializer(required=False,many=True)
     operating_hours = OperatingHourSerializer(required=False)
 
@@ -122,11 +122,11 @@ class DuplicateSerializer(serializers.ModelSerializer):
         depth = 0
         model = Location
         fields = (
-            'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','area','people','operating_hours'
+            'id','location_name','location_code', 'location_address', 'timezone', 'location_week_starts_on','business_location','areas','people','operating_hours'
             )
 
     def create(self, validated_data):
-        areas_data = validated_data.pop('area',None)
+        areas_data = validated_data.pop('areas',None)
         users_data = validated_data.pop('people',None)
 
         location = Location.objects.create(**validated_data)
@@ -143,3 +143,46 @@ class DuplicateSerializer(serializers.ModelSerializer):
             print(operating_hours)
         return location
 
+class BreakSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Break
+        fields = (
+            'id', 'break_type', 'duration', 'start','finish','shift'
+            )
+class ShiftSerializer(serializers.ModelSerializer):
+    shift_break = BreakSerializer(required=False,many=True)
+    class Meta:
+        model = Shift
+        fields = (
+            'id', 'user', 'area', 'start','finish','date','shift_type','location','shift_break'
+            )
+    def create(self,validated_data):
+        shift_break_data = validated_data.pop('shift_break',None)
+        shift = Shift.objects.create(**validated_data)
+        if shift_break_data:
+            for data in shift_break_data:
+                break_ = Break.objects.create(shift=shift, **data)
+        return shift
+    
+    def update(self, instance, validated_data):
+        shifts_break_data = validated_data.pop('shifts_break',None)
+        shifts_break = instance.shifts_break
+        instance.user = validated_data.get('user', instance.user)
+        instance.area = validated_data.get('area', instance.area)
+        instance.start = validated_data.get('start', instance.start)
+        instance.finish = validated_data.get('finish', instance.finish)
+        instance.date = validated_data.get('date', instance.date)
+        instance.shift_type = validated_data.get('shift_type', instance.shift_type)
+        instance.location = validated_data.get('location', instance.location)
+        related_objects = shifts_break.all()
+        for related_obj in related_objects:
+            if shifts_break_data:
+                for shifts_break in shifts_break_data:
+                    related_obj.break_type = shifts_break.get('break_type', related_obj.break_type)
+                    related_obj.duration = shifts_break.get('duration', related_obj.duration)
+                    related_obj.start = shifts_break.get('start', related_obj.start)
+                    related_obj.finish = shifts_break.get('finish', related_obj.finish)
+                    related_obj.shift = shifts_break.get('shift', related_obj.shift)
+                    related_obj.save()
+        instance.save()
+        return instance

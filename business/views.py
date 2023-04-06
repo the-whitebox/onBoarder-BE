@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from accounts.models import User
-from business.models import Business,Location,Area,OperatingHours
-from business.serializers import BusinessSerializer,LocationSerializer
+from business.models import Business,Location,Area,OperatingHours,Shift
+from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
     viewsets, views,
@@ -108,8 +108,8 @@ class SearchMembers(viewsets.ModelViewSet):
         if location_id:
             if area:
                 queryset = User.objects.filter(user_location=location_id)
-            # else:
-            #     queryset = User.objects.filter(user_location=location_id)
+            else:
+                queryset = User.objects.filter(user_location=location_id)
             return queryset
         
         else:
@@ -120,26 +120,127 @@ class SearchMembers(viewsets.ModelViewSet):
             return users
 
 
-class ShowSchedules(APIView):
-    def get(self,request ,*args, **kwargs):
-        location_id = self.request.data.get('location_id',None)
-        all_members=[]
-        location = Location.objects.get(id=location_id)
+class ShowSchedules(viewsets.ModelViewSet):
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+    
+    def get_queryset(self):
+        location_id = self.request.GET.get('location_id', None)
+        area = self.request.GET.get('area', None)
+        view_by = self.request.GET.get('view_by', None) # AREA, Team Member
+        duration = self.request.GET.get('duration', None) # day, week, 2 weeks, month
 
+        # datetime.now().date 
+        # Mon to Sun
         try:
-            if location:
-                users = User.objects.filter(user_location=location)
-            else:
-                users = User.objects.all()
-            for user in users:
-                userworkinghours = UserWorkingHours.objects.get(user=user)
-                stress = userworkinghours.stress_level
-                total_hours = userworkinghours.total_hours_for_work_period
-                base_pay = UserPayDetail.objects.get(user=user).hourly_pay_rate.weekday_rate
-                response = {"username":user.username,"Total hours": total_hours,"Base Pay": base_pay,"Stress":stress}
-                all_members.append(response)
-            return Response(all_members, status.HTTP_200_OK)
+            my_location = Location.objects.get(id=location_id)
+            my_area = Area.objects.filter(id=area).first()
+            if my_location:
+                if my_area:
+                    shifts = Shift.objects.filter(location=my_location,area=my_area)
+                    return shifts
+                else:
+                    shifts = Shift.objects.filter(location=my_location)
+                    return shifts
         except:
-            return Response({'Message': "Bad Request"}, status.HTTP_400_BAD_REQUEST)
+                all_location = Location.objects.all()
 
+                for location in all_location:
+                    shifts = Shift.objects.filter(location=location)
+                    return shifts
+
+    
+    
+    
+    
+    # def get(self,request ,*args, **kwargs):
+    #     location_id = self.request.data.get('location_id',None)
+    #     all_members=[]
+    #     location = Location.objects.get(id=location_id)
+
+    #     try:
+    #         if location:
+    #             users = User.objects.filter(user_location=location)
+    #         else:
+    #             users = User.objects.all()
+    #         for user in users:
+    #             userworkinghours = UserWorkingHours.objects.get(user=user)
+    #             stress = userworkinghours.stress_level
+    #             total_hours = userworkinghours.total_hours_for_work_period
+    #             base_pay = UserPayDetail.objects.get(user=user).hourly_pay_rate.weekday_rate
+    #             response = {"username":user.username,"Total hours": total_hours,"Base Pay": base_pay,"Stress":stress}
+    #             all_members.append(response)
+    #         return Response(all_members, status.HTTP_200_OK)
+    #     except:
+    #         return Response({'Message': "Bad Request"}, status.HTTP_400_BAD_REQUEST)
+
+
+class ShiftViewSet(viewsets.ModelViewSet):
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+    # def get_queryset(self):
+    #     shift_type = self.request.GET.get('shift_type', None)
+    #     if shift_type:
+    #         shift_data = Shift.objects.filter(shift_type=shift_type)
+    #         shift_data.delete()
+    #         return Response({"Shifts deleted successfully"})
+    #     else:
+    #         return super().get_queryset()
+    def delete(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset.delete()
+        return Response("All Shifts deleted")
+        
+class ShowSchedulesByDate(viewsets.ModelViewSet):
+    # queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+    def get_queryset(self):
+        date = self.request.GET.get('date', None)
+        if date:
+            Shifts = Shift.objects.filter(date=date)
+            return Shifts
+        
+    
+class RemoveEmptyShifts(APIView):
+
+    def delete(self, request, shift_type="Empty"):
+        location_id = self.request.GET.get('location_id', None)
+        area_id = self.request.GET.get('area_id', None)
+        my_location = Location.objects.get(id=location_id)
+        my_area = Area.objects.filter(id=area_id).first()
+        if location_id and area_id:
+            shifts = Shift.objects.filter(shift_type=shift_type, location=my_location,area=my_area)
+            shifts.delete()
+        if location_id:
+            shifts = Shift.objects.filter(shift_type=shift_type, location=my_location)
+            shifts.delete()
+        else:
+            shifts = Shift.objects.filter(shift_type=shift_type)
+            shifts.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MarkEmptyShiftsAsOpen(APIView):
+
+    def patch(self, request, shift_type="Empty"):
+        location_id = self.request.GET.get('location_id', None)
+        area_id = self.request.GET.get('area_id', None)
+        my_location = Location.objects.get(id=location_id)
+        my_area = Area.objects.filter(id=area_id).first()
+        if location_id and area_id:
+            shifts = Shift.objects.filter(shift_type=shift_type, location=my_location, area=my_area)
+            for shift in shifts:
+                shift.shift_type = "Open"
+                shift.save()
+        if location_id and area_id:
+            shifts = Shift.objects.filter(shift_type=shift_type, location=my_location, area=my_area)
+            for shift in shifts:
+                shift.shift_type = "Open"
+                shift.save()
+        else:
+            shifts = Shift.objects.all()
+            for shift in shifts:
+                shift.shift_type = "Open"
+                shift.save()        
+            return Response("Empty shifts are maked as Open Shifts")
 

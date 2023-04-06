@@ -2,6 +2,7 @@ from django.db import models
 from MaxPilot.models import MaxPilotBaseModel
 from django.core.exceptions import ValidationError
 from datetime import datetime
+from django.utils import timezone
 # Create your models here.
 class Business(MaxPilotBaseModel):
 
@@ -72,18 +73,36 @@ class OperatingHours(MaxPilotBaseModel):
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
 
 
-class Shift(OperatingHours):
+class Shift(MaxPilotBaseModel):
+    Open = "Open"
+    Empty = "Empty"
+    shift_choices = (
+        (Open, 'Open'),
+        (Empty, 'Empty'),
+
+    )
     user = models.ForeignKey("accounts.User",on_delete=models.CASCADE)
-    area = models.OneToOneField(Area,on_delete=models.CASCADE)
+    area = models.ForeignKey(Area,related_name='areas',on_delete=models.CASCADE)
     start = models.TimeField()
     finish = models.TimeField()
+    date = models.DateField(default=timezone.now)
+    publish = models.BooleanField(default=False)
+    shift_type = models.CharField(max_length=5,choices=shift_choices, null=True, blank=True)
+    location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
 
 class Break(MaxPilotBaseModel):
     break_type = models.CharField(max_length=100, default="Meal break")
     duration = models.TimeField(default="15")
     start = models.TimeField()
     finish = models.TimeField()
-    shift = models.ForeignKey(Shift,related_name='shifts', on_delete=models.CASCADE)
+    shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
+
+
+# class Schedule(MaxPilotBaseModel):
+#     location = models.ForeignKey
+
+
+
 
 
 
