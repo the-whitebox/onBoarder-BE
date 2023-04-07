@@ -48,12 +48,13 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
-
+        print("this is bulk update")
         data = {  # we need to separate out the id from the data
             i['id']: {k: v for k, v in i.items() if k != 'id'}
             for i in request.data
         }
         response = []
+        print(self.get_queryset().filter(id__in=data.keys()))
         for inst in self.get_queryset().filter(id__in=data.keys()):
             serializer = self.get_serializer(inst, data=data[inst.id], partial=True)
             serializer.is_valid(raise_exception=True)

@@ -85,7 +85,8 @@ class Shift(MaxPilotBaseModel):
     area = models.ForeignKey(Area,related_name='areas',on_delete=models.CASCADE)
     start = models.TimeField()
     finish = models.TimeField()
-    date = models.DateField(default=timezone.now)
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField(default=timezone.now)
     publish = models.BooleanField(default=False)
     shift_type = models.CharField(max_length=5,choices=shift_choices, null=True, blank=True)
     location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
@@ -96,11 +97,6 @@ class Break(MaxPilotBaseModel):
     start = models.TimeField()
     finish = models.TimeField()
     shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
-
-
-# class Schedule(MaxPilotBaseModel):
-#     location = models.ForeignKey
-
 
 
 

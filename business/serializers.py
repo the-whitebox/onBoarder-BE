@@ -75,7 +75,6 @@ class LocationSerializer(serializers.ModelSerializer):
         area = instance.areas
         users = instance.people
         operating_hours = instance.operating_hours
-        print(operating_hours)
 
         instance.location_name = validated_data.get('location_name', instance.location_name)
         instance.location_code = validated_data.get('location_code', instance.location_code)
@@ -91,24 +90,22 @@ class LocationSerializer(serializers.ModelSerializer):
                     related_obj.area_of_work = areas.get('area_of_work', related_obj.area_of_work)
                     related_obj.address = areas.get('address', related_obj.address)
                     related_obj.save()
-        if users_data:
-            for userss in users_data:
-                users.location_name = userss.get('location_name', users.location_name)
-                users.location_address = userss.get('location_address', users.location_address)
-                users.timezone = userss.get('timezone', users.timezone)
-                users.location_week_starts_on = userss.get('location_week_starts_on', users.location_week_starts_on)
-                users.save()
-
+        # if users_data:
+        #     for userss in users_data:
+        #         users.location_name = userss.get('location_name', users.location_name)
+        #         users.location_address = userss.get('location_address', users.location_address)
+        #         users.timezone = userss.get('timezone', users.timezone)
+        #         users.location_week_starts_on = userss.get('location_week_starts_on', users.location_week_starts_on)
+        #         users.save()
         related_objects = operating_hours.all()
         for related_obj in related_objects:
             if operating_hours_data:
                 for operating_hour in operating_hours_data:
-                    related_obj.days = operating_hour.get('days', related_obj.days)
+                    # related_obj.days = operating_hour.get('days', related_obj.days)
                     related_obj.start_time = operating_hour.get('start_time', related_obj.start_time)
                     related_obj.end_time = operating_hour.get('end_time', related_obj.end_time)
                     related_obj.is_closed = operating_hour.get('is_closed', related_obj.is_closed)
                     related_obj.save()
-        
         return instance
 
 
@@ -140,7 +137,6 @@ class DuplicateSerializer(serializers.ModelSerializer):
         week_days = ['monday','Tuesday','Wednesday','Thursday','Friday','Satureday','Sunday']
         for days in week_days:
             operating_hours = OperatingHours.objects.create(location=location,days=days)
-            print(operating_hours)
         return location
 
 class BreakSerializer(serializers.ModelSerializer):
@@ -149,19 +145,33 @@ class BreakSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'break_type', 'duration', 'start','finish','shift'
             )
+from django.core.mail import send_mail
+from django.conf import settings
 class ShiftSerializer(serializers.ModelSerializer):
     shift_break = BreakSerializer(required=False,many=True)
     class Meta:
         model = Shift
         fields = (
-            'id', 'user', 'area', 'start','finish','date','shift_type','location','shift_break'
+            'id', 'user', 'area', 'start','finish','start_date','end_date','publish','shift_type','location','shift_break'
             )
+    
     def create(self,validated_data):
         shift_break_data = validated_data.pop('shift_break',None)
+
         shift = Shift.objects.create(**validated_data)
+        if shift.publish == True:
+            # user = User.objects.get(id=shift.user)
+            email_sent = send_mail(
+                'Your MaxPilot Shift details',
+                "Your shift has been created",
+                settings.EMAIL_HOST_USER,
+                [shift.user.email],
+                fail_silently = False,
+            )
         if shift_break_data:
             for data in shift_break_data:
                 break_ = Break.objects.create(shift=shift, **data)
+
         return shift
     
     def update(self, instance, validated_data):
@@ -171,7 +181,8 @@ class ShiftSerializer(serializers.ModelSerializer):
         instance.area = validated_data.get('area', instance.area)
         instance.start = validated_data.get('start', instance.start)
         instance.finish = validated_data.get('finish', instance.finish)
-        instance.date = validated_data.get('date', instance.date)
+        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.end_date = validated_data.get('end_date', instance.end_date)
         instance.shift_type = validated_data.get('shift_type', instance.shift_type)
         instance.location = validated_data.get('location', instance.location)
         related_objects = shifts_break.all()
