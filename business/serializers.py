@@ -195,5 +195,4 @@ class ShiftSerializer(serializers.ModelSerializer):
                     related_obj.finish = shifts_break.get('finish', related_obj.finish)
                     related_obj.shift = shifts_break.get('shift', related_obj.shift)
                     related_obj.save()
-        instance.save()
         return instance

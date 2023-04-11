@@ -264,17 +264,6 @@ class CsvNewUsers(APIView):
 
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
 
-# class EnumsReturn(viewsets.ModelViewSet):
-#     queryset = ENUMS.objects.all()
-#     serializer_class = ENUMSerializer
-
-#     def get_queryset(self):
-#         queryset = super(EnumsReturn, self).get_queryset()
-#         group = self.request.GET.get('group',None)
-#         if group:
-#             return ENUMS.objects.filter(group=group)
-#         else:
-#             return queryset
 class EnumsReturn(APIView):
     def get(self,request ,*args, **kwargs):
         group = self.request.GET.get('group',None)
