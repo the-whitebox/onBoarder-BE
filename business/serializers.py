@@ -24,7 +24,6 @@ class BusinessSerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             return Response({'error': 'user_not_found'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
         return business
     
 class OperatingHourSerializer(serializers.ModelSerializer):

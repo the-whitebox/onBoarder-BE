@@ -21,51 +21,46 @@ class BusinessRegistrationViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
 
-    # def perform_create(self, serializer):
-    #     return serializer.save(user = self.request.user)
-
 
 class BusinessLocation(viewsets.ModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
 
     def patch(self, request, *args, **kwargs):
-
         source_id = request.data.get('source_id')
         destination_ids = request.data.get('destination_ids')
         location = Location.objects.filter(id=source_id).first()
         operating_hours = OperatingHours.objects.filter(location=location)
-        # try:
-        for id in destination_ids:
-            dest_location = Location.objects.filter(id=id).first()
-            operating_hour = OperatingHours.objects.filter(location=dest_location)
-            related_objects = operating_hours.all()
-            for hours in operating_hour:
-                for related_obj in related_objects:
-                    hours.days = related_obj.days
-                    hours.start_time = related_obj.start_time
-                    hours.end_time = related_obj.end_time
-                    hours.is_closed = related_obj.is_closed
-                    hours.save()
-            dest_location.save()
-        return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
-        # except:
-        #     return Response({'Message': "Operating hours did not copy"}, status.HTTP_400_BAD_REQUEST)
+        try:
+            # target_location.operating_hours.set(source_location.operating_hours.all())
+            for id in destination_ids:
+                dest_location = Location.objects.filter(id=id).first()
+                operating_hour = dest_location.operating_hours
+                related_objects = operating_hours.all()
+                if related_objects:
+                    for related_obj in related_objects:
+                            operating_hour.start_time = related_obj.start_time
+                            operating_hour.end_time = related_obj.end_time
+                            operating_hour.is_closed = related_obj.is_closed
+                    dest_location.save()
+                else:
+                    return Response({'Message': "Operating hours in Source location are Empty"}, status.HTTP_400_BAD_REQUEST)
+            return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
+        except:
+            return Response({'Message': "Operating hours did not copy"}, status.HTTP_400_BAD_REQUEST)
 
 class DuplicateSettings(APIView):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer(Location, many=True)
 
     def post(self, request):
-        # Get the ID of the instance to duplicate
         id = request.data.get('id', None)
-        # Get the instance to duplicate
         try:
             location = Location.objects.get(id=id)
             areas = location.areas.all()
             users = location.people.all()
+            print(users)
             operating_hours = location.operating_hours.all()
-            # Create a new instance as a duplicate of the existing instance
             new_instance = Location.objects.create(
                 location_name=request.data.get('location_name', None),
                 location_code=location.location_code,
@@ -83,9 +78,10 @@ class DuplicateSettings(APIView):
                         location=new_instance
                     )
                 # for people in users:
+                #     print(people)
                 #     myusers = User.objects.filter(
-                #             user_location=new_instance
-                #         )
+                #             user_location=people
+                #         ).first()
                 # print(myusers)
                 for operating_hour in operating_hours:
                     hours = OperatingHours.objects.create(
@@ -95,17 +91,14 @@ class DuplicateSettings(APIView):
                         end_time=operating_hour.end_time,
                         location=new_instance,
                     )
-                # new_instance.operating_hours.set(hours)
             new_instance.save()
             return Response("Object Duplicated") 
         except: 
             return Response({"Object dublication failed"},status=status.HTTP_400_BAD_REQUEST)
 
-
 # Schedule Apis
 class SearchMembers(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-
     def get_queryset(self,):
         location_id = self.request.GET.get('location_id', None)
         if location_id:
@@ -121,13 +114,11 @@ class SearchMembers(viewsets.ModelViewSet):
                     all_users.append(user)
             return all_users
 
-
 class ShowSchedules(viewsets.ModelViewSet):
 
     queryset = Shift.objects.all()
     filter_backends = [filters.SearchFilter]
     serializer_class = ShiftSerializer
-
     def get_queryset(self):
         area_id = self.request.GET.get('area_id', None)
         string = self.request.GET.get('string', None)
@@ -181,7 +172,6 @@ class ShowSchedules(viewsets.ModelViewSet):
                     last_day_of_month = first_day_of_month + timedelta(days=32 - first_day_of_month.day)
                     last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
                     return Shift.objects.filter(start_date__gte=first_day_of_month,end_date__lte=last_day_of_month,location=location_id,area=area_id,user=user)
-
             else:
                 if string == "day_by_area":
                     today = timezone.now().date()      
@@ -229,7 +219,6 @@ class ShowSchedules(viewsets.ModelViewSet):
                     last_day_of_month = first_day_of_month + timedelta(days=32 - first_day_of_month.day)
                     last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
                     return Shift.objects.filter(start_date__gte=first_day_of_month,end_date__lte=last_day_of_month,location=location_id,user=user)
-
         else:
             print("Inside all locations")
             if string == "day_by_area":
@@ -279,8 +268,6 @@ class ShowSchedules(viewsets.ModelViewSet):
                 last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
                 return Shift.objects.filter(start_date__gte=first_day_of_month,end_date__lte=last_day_of_month,user=user)
 
-
-
 class ShowSchedulesByDate(viewsets.ModelViewSet):
     queryset = Shift.objects.all()
     serializer_class = ShiftSerializer
@@ -296,7 +283,6 @@ class ShiftViewSet(viewsets.ModelViewSet):
 
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
-
         data = {  # we need to separate out the id from the data
             i['id']: {k: v for k, v in i.items() if k != 'id'}
             for i in request.data
@@ -313,46 +299,38 @@ class ShiftViewSet(viewsets.ModelViewSet):
     def delete(self, request, *args, **kwargs):
         location_id = self.request.GET.get('location_id', None)
         area_id = self.request.GET.get('area_id', None)
-        try:
-            if location_id:
-                if area_id:
-                    shifts = Shift.objects.filter(location=location_id,area=area_id)
-                    shifts.delete()
-                    return Response("Shifts with specific Area are deleted")
-
-                else:
-                    shifts = Shift.objects.filter(location=location_id)
-                    shifts.delete()
-                    return Response("Shifts with specific Location are deleted")
-        except:
+        if location_id:
+            if area_id:
+                shifts = Shift.objects.filter(location=location_id,area=area_id)
+                shifts.delete()
+                return Response("Shifts with specific Area are deleted")
+            else:
+                shifts = Shift.objects.filter(location=location_id)
+                shifts.delete()
+                return Response("Shifts with specific Location are deleted")
+        else:
                 all_shifts = Shift.objects.all()
                 all_shifts.delete()
-
+                return Response("All Shifts are deleted")
 
 class RemoveEmptyShifts(APIView):
     def delete(self, request, shift_type="Empty"):
         location_id = self.request.GET.get('location_id', None)
         area_id = self.request.GET.get('area_id', None)
-        # my_location = Location.objects.get(id=location_id)
-        # my_area = Area.objects.filter(id=area_id).first()
         if location_id and area_id:
             shifts = Shift.objects.filter(shift_type=shift_type, location=location_id,area=area_id)
             shifts.delete()
             return Response("Empty Shifts with specific Area are removed",status=status.HTTP_204_NO_CONTENT)
-
         if location_id:
             shifts = Shift.objects.filter(shift_type=shift_type, location=location_id)
             shifts.delete()
             return Response("Empty Shifts with specific Location are removed",status=status.HTTP_204_NO_CONTENT)
-        
         else:
             shifts = Shift.objects.filter(shift_type=shift_type)
             shifts.delete()
             return Response("Empty Shifts are removed",status=status.HTTP_204_NO_CONTENT)
 
-
 class MarkEmptyShiftsAsOpen(APIView):
-
     def patch(self, request, shift_type="Empty"):
         location_id = self.request.GET.get('location_id', None)
         area_id = self.request.GET.get('area_id', None)
@@ -381,7 +359,6 @@ class ShowStatsforShifts(APIView):
         unpublished_shifts = Shift.objects.filter(publish=False)
         Open_shift = Shift.objects.filter(shift_type="Open")
         Empty_shift = Shift.objects.filter(shift_type="Empty")
-
         shift_stats = {
             "published_shifts" : len(published_shifts),
             "unpublished_shifts" : len(unpublished_shifts),
