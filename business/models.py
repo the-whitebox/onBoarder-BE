@@ -69,13 +69,13 @@ class OperatingHours(MaxPilotBaseModel):
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
 
 class Shift(MaxPilotBaseModel):
-    Open = "Open"
-    Empty = "Empty"
-    shift_choices = (
-    (Open, 'Open'),
-    (Empty, 'Empty'),
+    # Open = "Open"
+    # Empty = "Empty"
+    # shift_choices = (
+    # (Open, 'Open'),
+    # (Empty, 'Empty'),
 
-    )
+    # )
     user = models.ForeignKey("accounts.User",on_delete=models.CASCADE)
     area = models.ForeignKey(Area,related_name='areas',on_delete=models.CASCADE)
     start = models.TimeField()
@@ -83,7 +83,7 @@ class Shift(MaxPilotBaseModel):
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(default=timezone.now)
     publish = models.BooleanField(default=False)
-    shift_type = models.CharField(max_length=5,choices=shift_choices, null=True, blank=True)
+    shift_type = models.PositiveIntegerField()
     location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
 
 class Break(MaxPilotBaseModel):

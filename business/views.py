@@ -14,6 +14,8 @@ from rest_framework import filters
 from datetime import timedelta
 from django.utils import timezone
 from dateutil.relativedelta import *
+from rest_framework.decorators import action
+from django.db import transaction
 # Create your views here.
 @authentication_classes([])
 @permission_classes([])
@@ -106,7 +108,6 @@ class SearchMembers(viewsets.ModelViewSet):
             return queryset
         else:
             all_location = Location.objects.all()
-            print(all_location)
             all_users = []
             for location in all_location:
                 people = User.objects.filter(user_location=location)
@@ -276,13 +277,9 @@ class ShowSchedulesByDate(viewsets.ModelViewSet):
         shifts = Shift.objects.filter(start_date=start_date)
         return shifts
 
-from rest_framework.decorators import action
-from django.db import transaction
-
 class ShiftViewSet(viewsets.ModelViewSet):
     queryset = Shift.objects.all()
     serializer_class = ShiftSerializer
-
     @transaction.atomic
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
@@ -296,7 +293,6 @@ class ShiftViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             response.append(serializer.data)
-
         return Response(response, status=status.HTTP_200_OK)
 
     def delete(self, request, *args, **kwargs):
@@ -317,7 +313,7 @@ class ShiftViewSet(viewsets.ModelViewSet):
                 return Response("All Shifts are deleted")
 
 class RemoveEmptyShifts(APIView):
-    def delete(self, request, shift_type="Empty"):
+    def delete(self, request, shift_type=1):
         location_id = self.request.GET.get('location_id', None)
         area_id = self.request.GET.get('area_id', None)
         if location_id and area_id:
@@ -334,25 +330,25 @@ class RemoveEmptyShifts(APIView):
             return Response("Empty Shifts are removed",status=status.HTTP_204_NO_CONTENT)
 
 class MarkEmptyShiftsAsOpen(APIView):
-    def patch(self, request, shift_type="Empty"):
+    def patch(self, request, shift_type=1):
         location_id = self.request.GET.get('location_id', None)
         area_id = self.request.GET.get('area_id', None)
         if location_id and area_id:
             shifts = Shift.objects.filter(shift_type=shift_type, location=location_id, area=area_id)
             for shift in shifts:
-                shift.shift_type = "Open"
+                shift.shift_type = 2
                 shift.save()
             return Response("Empty shifts with specific Area are maked as Open Shifts")
         if location_id:
             shifts = Shift.objects.filter(shift_type=shift_type, location=location_id, area=area_id)
             for shift in shifts:
-                shift.shift_type = "Open"
+                shift.shift_type = 2
                 shift.save()
             return Response("Empty shifts with specific Location are maked as Open Shifts")
         else:
             shifts = Shift.objects.all()
             for shift in shifts:
-                shift.shift_type = "Open"
+                shift.shift_type = 2
                 shift.save()        
             return Response("Empty shifts are maked as Open Shifts")
 
@@ -360,8 +356,8 @@ class ShowStatsforShifts(APIView):
     def get(self, request):
         published_shifts = Shift.objects.filter(publish=True)
         unpublished_shifts = Shift.objects.filter(publish=False)
-        Open_shift = Shift.objects.filter(shift_type="Open")
-        Empty_shift = Shift.objects.filter(shift_type="Empty")
+        Open_shift = Shift.objects.filter(shift_type=2)
+        Empty_shift = Shift.objects.filter(shift_type=1)
         shift_stats = {
             "published_shifts" : len(published_shifts),
             "unpublished_shifts" : len(unpublished_shifts),
@@ -377,11 +373,11 @@ from django.template.loader import render_to_string
 class PublishShift(APIView):
     def patch(self, request):
         shift_id = request.data.get('shift_id', None)
-        shift_type = request.data.get('shift_type', None)
+        publish = request.data.get('publish', None)
         shift = Shift.objects.filter(id=shift_id).first()
         if shift:
-            if shift_type == True:
-                shift.shift_type = shift_type  
+            if publish == True:
+                shift.shift_type = publish  
                 template = render_to_string('email_template.html')
 
                 email_sent = send_mail(
