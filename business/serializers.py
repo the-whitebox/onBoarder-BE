@@ -4,7 +4,8 @@ from accounts.models import User
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.serializers import UserSerializer
-from employment.serializers import UserWorkingHoursSerializer
+from django.core.mail import send_mail
+from django.conf import settings
 
 class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,7 +41,6 @@ class AreaSerializer(serializers.ModelSerializer):
             'physical_address', 'area_of_work', 'address', 'location'
             )
 class LocationSerializer(serializers.ModelSerializer):
-
     areas = AreaSerializer(required=False,many=True)
     people = UserSerializer(required=False,many=True)
     operating_hours = OperatingHourSerializer(required=False,many=True)
@@ -61,6 +61,13 @@ class LocationSerializer(serializers.ModelSerializer):
         if users_data:
             for data in users_data:
                 people = User.objects.create(user_location=location, **data)
+                email_sent = send_mail(
+                    'Dupty',
+                    f"welcome to MaxPilot. You have been added as Team members with Email address: {people.email}",
+                    settings.EMAIL_HOST_USER,
+                    [people.email],
+                    fail_silently = False,
+                )
         week_days = ['monday','Tuesday','Wednesday','Thursday','Friday','Satureday','Sunday']
         for days in week_days:
             operating_hours = OperatingHours.objects.create(location=location,days=days)

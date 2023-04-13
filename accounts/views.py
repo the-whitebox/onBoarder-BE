@@ -218,7 +218,6 @@ class InvitationLinkView(APIView):
 import csv
 import codecs
 class CsvReader(APIView):
-
     def post(self,request):
         file_obj = request.FILES['csv']
         print(type(file_obj))
