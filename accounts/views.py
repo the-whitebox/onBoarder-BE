@@ -108,7 +108,7 @@ class GoogleLogin(SocialLoginView):
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
 
-from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -222,7 +222,7 @@ class CsvReader(APIView):
     def post(self,request):
         file_obj = request.FILES['csv']
         print(type(file_obj))
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get(self,request,*args, **kwargs):
         file = request.FILES['csv']

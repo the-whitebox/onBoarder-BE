@@ -277,10 +277,13 @@ class ShowSchedulesByDate(viewsets.ModelViewSet):
         return shifts
 
 from rest_framework.decorators import action
+from django.db import transaction
+
 class ShiftViewSet(viewsets.ModelViewSet):
     queryset = Shift.objects.all()
     serializer_class = ShiftSerializer
 
+    @transaction.atomic
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
         data = {  # we need to separate out the id from the data
@@ -366,4 +369,32 @@ class ShowStatsforShifts(APIView):
             "Empty_shift" : len(Empty_shift),
         }
         return Response({"shift_stats": shift_stats})
-    
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+
+class PublishShift(APIView):
+    def patch(self, request):
+        shift_id = request.data.get('shift_id', None)
+        shift_type = request.data.get('shift_type', None)
+        shift = Shift.objects.filter(id=shift_id).first()
+        if shift:
+            if shift_type == True:
+                shift.shift_type = shift_type  
+                template = render_to_string('email_template.html')
+
+                email_sent = send_mail(
+                    'Your MaxPilot Shift details',
+                    None,
+                    settings.EMAIL_HOST_USER,
+                    [shift.user.email],
+                    fail_silently = False,
+                    html_message = template
+                )
+                shift.save()
+                return Response("Shift Published")
+            else:
+                return Response("Shift Unpublished, Change value of publish to True.")
+        else:
+            return Response(f"Object with ID {shift_id} does not exists.")

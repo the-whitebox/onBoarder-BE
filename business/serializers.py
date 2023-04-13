@@ -107,7 +107,6 @@ class LocationSerializer(serializers.ModelSerializer):
                     related_obj.save()
         return instance
 
-
 class DuplicateSerializer(serializers.ModelSerializer):
 
     areas = AreaSerializer(required=False,many=True)
@@ -144,8 +143,7 @@ class BreakSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'break_type', 'duration', 'start','finish','shift'
             )
-from django.core.mail import send_mail
-from django.conf import settings
+
 class ShiftSerializer(serializers.ModelSerializer):
     shift_break = BreakSerializer(required=False,many=True)
     class Meta:
@@ -158,15 +156,6 @@ class ShiftSerializer(serializers.ModelSerializer):
         shift_break_data = validated_data.pop('shift_break',None)
 
         shift = Shift.objects.create(**validated_data)
-        if shift.publish == True:
-            # user = User.objects.get(id=shift.user)
-            email_sent = send_mail(
-                'Your MaxPilot Shift details',
-                "Your shift has been created",
-                settings.EMAIL_HOST_USER,
-                [shift.user.email],
-                fail_silently = False,
-            )
         if shift_break_data:
             for data in shift_break_data:
                 break_ = Break.objects.create(shift=shift, **data)

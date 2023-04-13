@@ -5,7 +5,6 @@ from datetime import datetime
 from django.utils import timezone
 # Create your models here.
 class Business(MaxPilotBaseModel):
-
     business_name = models.CharField(max_length=70, blank=True, null=True)
     mobile_number = models.CharField(null=True, blank=True, max_length=255)
     business_type = models.PositiveIntegerField(null=True,blank=True)
@@ -18,7 +17,6 @@ class Business(MaxPilotBaseModel):
 
     def __str__(self):
         return str(self.business_name)
-
 
 class Location(MaxPilotBaseModel):
     location_name = models.CharField(max_length=200)
@@ -43,7 +41,6 @@ class Area(MaxPilotBaseModel):
     def __str__(self):
         return self.area_of_work
 
-
 class OperatingHours(MaxPilotBaseModel):
     Monday = "Monday"
     Tuesday = "Tuesday"
@@ -62,7 +59,6 @@ class OperatingHours(MaxPilotBaseModel):
         (Saturday, 'Saturday'),
         (Sunday, 'Sunday'),
     )
-
     days = models.CharField(max_length=9, choices=DAYS_OF_WEEK)
     start_time = models.TimeField(default='09:00')
     end_time = models.TimeField(default='05:00')
@@ -72,13 +68,12 @@ class OperatingHours(MaxPilotBaseModel):
     is_closed = models.BooleanField(default=False)
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
 
-
 class Shift(MaxPilotBaseModel):
     Open = "Open"
     Empty = "Empty"
     shift_choices = (
-        (Open, 'Open'),
-        (Empty, 'Empty'),
+    (Open, 'Open'),
+    (Empty, 'Empty'),
 
     )
     user = models.ForeignKey("accounts.User",on_delete=models.CASCADE)
