@@ -30,6 +30,9 @@ from django.db import transaction
 from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
+from rest_framework.decorators import authentication_classes, permission_classes
+import jwt
+from rest_framework_jwt.utils import jwt_payload_handler
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -45,12 +48,13 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
-
+        print("this is bulk update")
         data = {  # we need to separate out the id from the data
             i['id']: {k: v for k, v in i.items() if k != 'id'}
             for i in request.data
         }
         response = []
+        print(self.get_queryset().filter(id__in=data.keys()))
         for inst in self.get_queryset().filter(id__in=data.keys()):
             serializer = self.get_serializer(inst, data=data[inst.id], partial=True)
             serializer.is_valid(raise_exception=True)
@@ -83,7 +87,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     #     elif self.action == 'list' or self.action == 'destroy':
     #         permission_classes = [IsAdminUser]
     #     return [permission() for permission in permission_classes]
-
+@authentication_classes([])
+@permission_classes([])
 class ENUMSViewSet(viewsets.ModelViewSet):
     queryset = ENUMS.objects.all()
     serializer_class = ENUMSerializer
@@ -103,6 +108,7 @@ class GoogleLogin(SocialLoginView):
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
 
+from rest_framework_simplejwt.tokens import RefreshToken
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -132,6 +138,7 @@ class UserRegistartionView(APIView):
                     myuser = UserProfile.objects.get(user=user)
                     Document.objects.create(content_object=myuser, image=request.FILES['image'])
                         # return Response("image saved")
+
             except:
                 pass
             email_sent = send_mail(
@@ -140,8 +147,16 @@ class UserRegistartionView(APIView):
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
+
             )
-            return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
+            # Tokens
+            refresh = RefreshToken.for_user(user)
+            access = str(refresh.access_token)
+            tokens = {
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+            return Response({'data': "User created successfully, please check you email for login credentials","tokens": tokens}, status.HTTP_200_OK)
             
         except Exception as e:
             print("message", e)
@@ -203,11 +218,10 @@ class InvitationLinkView(APIView):
 import csv
 import codecs
 class CsvReader(APIView):
-
     def post(self,request):
         file_obj = request.FILES['csv']
         print(type(file_obj))
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get(self,request,*args, **kwargs):
         file = request.FILES['csv']
@@ -249,17 +263,6 @@ class CsvNewUsers(APIView):
 
         return Response({'data': "User added successfully, please check your email",'email':email_sent}, status.HTTP_200_OK)
 
-# class EnumsReturn(viewsets.ModelViewSet):
-#     queryset = ENUMS.objects.all()
-#     serializer_class = ENUMSerializer
-
-#     def get_queryset(self):
-#         queryset = super(EnumsReturn, self).get_queryset()
-#         group = self.request.GET.get('group',None)
-#         if group:
-#             return ENUMS.objects.filter(group=group)
-#         else:
-#             return queryset
 class EnumsReturn(APIView):
     def get(self,request ,*args, **kwargs):
         group = self.request.GET.get('group',None)
