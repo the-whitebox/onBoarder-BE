@@ -23,6 +23,7 @@ class BusinessRegistrationViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
 
+from rest_framework.generics import UpdateAPIView
 
 class BusinessLocation(viewsets.ModelViewSet):
     queryset = Location.objects.all()
@@ -32,22 +33,17 @@ class BusinessLocation(viewsets.ModelViewSet):
         source_id = request.data.get('source_id')
         destination_ids = request.data.get('destination_ids')
         location = Location.objects.filter(id=source_id).first()
-        operating_hours = OperatingHours.objects.filter(location=location)
+        operating_hours = location.operating_hours.all()
         try:
-            # target_location.operating_hours.set(source_location.operating_hours.all())
             for id in destination_ids:
                 dest_location = Location.objects.filter(id=id).first()
                 operating_hour = dest_location.operating_hours
-                related_objects = operating_hours.all()
-                if related_objects:
-                    for related_obj in related_objects:
-                            operating_hour.start_time = related_obj.start_time
-                            operating_hour.end_time = related_obj.end_time
-                            operating_hour.is_closed = related_obj.is_closed
-                    dest_location.save()
-                else:
-                    return Response({'Message': "Operating hours in Source location are Empty"}, status.HTTP_400_BAD_REQUEST)
-            return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
+                operating_hour.all().delete()
+                operating_hour.set(operating_hours)
+                dest_location.save()
+                # serializer = self.get_serializer(dest_location)
+                # return Response(serializer.data)
+                return Response({'Message': "Operating hours copied sucessfully"}, status.HTTP_200_OK)
         except:
             return Response({'Message': "Operating hours did not copy"}, status.HTTP_400_BAD_REQUEST)
 
