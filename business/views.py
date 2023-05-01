@@ -521,3 +521,17 @@ class SendOffers(APIView):
         shift.save()
         serializer = self.serializer_class(shift)
         return Response(serializer.data)
+
+class ViewShiftHistory(APIView):
+    def get(self,request):
+        shift_id = int(self.request.GET.get('shift_id',None))
+        print(shift_id)
+        if shift_id:
+            shift = Shift.objects.get(id=shift_id)
+            return Response({
+                "Created_by": shift.user.username,
+                "Date" : shift.start_date
+            })
+        else:
+            return Response("Please provide Shift ID")
+        

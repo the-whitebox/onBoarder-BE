@@ -9,7 +9,7 @@ from business.views import (BusinessRegistrationViewSet,
                             RemoveEmptyShifts,MarkEmptyShiftsAsOpen,
                             ShowStatsforShifts,PublishShift,
                             ShiftCopyView,ShiftImportView,DownloadWithCsv,
-                            ShiftCloneView,SendOffers)
+                            ShiftCloneView,SendOffers,ViewShiftHistory)
 
 router = routers.DefaultRouter()
 router.register(r'business', BusinessRegistrationViewSet, basename='business')
@@ -32,4 +32,5 @@ urlpatterns = [
     path('download_with_csv/', DownloadWithCsv.as_view(), name='download_with_csv'),
     path('clone_shift/', ShiftCloneView.as_view(), name='clone_shift'),
     path('send_offers/', SendOffers.as_view(), name='send_offers'),
+    path('shift_history/', ViewShiftHistory.as_view(), name='shift_history'),
 ]
