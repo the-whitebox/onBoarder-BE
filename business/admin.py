@@ -1,5 +1,5 @@
 from django.contrib import admin
-from business.models import Business, Location, Area, OperatingHours, Shift, Break
+from business.models import Business, Location, Area, OperatingHours, Shift, Break, Template
 
 # Register your models here.
 admin.site.register(Business)
@@ -8,3 +8,4 @@ admin.site.register(Area)
 admin.site.register(OperatingHours)
 admin.site.register(Shift)
 admin.site.register(Break)
+admin.site.register(Template)

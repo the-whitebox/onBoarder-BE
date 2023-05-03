@@ -67,7 +67,7 @@ class OperatingHours(MaxPilotBaseModel):
             raise ValidationError('End time must be after start time.')
     is_closed = models.BooleanField(default=False)
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
-
+    
 class Shift(MaxPilotBaseModel):
     # Open = "Open"
     # Empty = "Empty"
@@ -93,9 +93,12 @@ class Break(MaxPilotBaseModel):
     finish = models.TimeField()
     shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
 
-
-
-
+class Template(MaxPilotBaseModel):
+    name = models.CharField(max_length=100,unique=True)
+    description = models.TextField(null=True,blank=True)
+    shifts = models.ManyToManyField(Shift,related_name="shifts_template")
+    def __str__(self):
+        return self.name
 
 # HEALTHCARE = "Healthcare"
     # RETAIL_HOSPITALITY = "Retail & Hospitality"

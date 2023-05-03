@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from accounts.models import User
-from business.models import Business,Location,Area,OperatingHours,Shift
+from business.models import Business,Location,Area,OperatingHours,Shift,Template
 from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
@@ -457,6 +457,25 @@ class ShiftImportView(APIView):
                     imported_shifts = Shift.objects.filter(location=location,area=area,start_date=date).first()
         serializer = self.serializer_class(imported_shifts)
         return Response(serializer.data)
+    
+
+class SaveTemplate(APIView):
+    def post(self,request):
+        location_id = self.request.GET.get('location_id')
+        shifts = Shift.objects.filter(location=location_id)
+        name = request.data.get('name')
+        description = request.data.get('description')
+        print(shifts)
+        if shifts:
+            all_temp = Template.objects.all()
+            temp = Template.objects.create(name=name,description=description)
+            all_temp.append(temp)
+            for shift in shifts:
+                shift.shifts_template.set(all_temp)
+                shift.save()
+            return Response("Template Created, all shifts has been copied")
+        
+        
 # Clone Shifts
 class ShiftCloneView(APIView):
     serializer_class = ShiftSerializer

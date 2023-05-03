@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from business.models import Business,Location,Area,OperatingHours,Shift,Break
+from business.models import Business,Location,Area,OperatingHours,Shift,Break,Template
 from accounts.models import User
 from rest_framework.response import Response
 from rest_framework import status
@@ -149,6 +149,13 @@ class BreakSerializer(serializers.ModelSerializer):
         model = Break
         fields = (
             'id', 'break_type', 'duration', 'start','finish','shift'
+            )
+        
+class TemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Template
+        fields = (
+            'id', 'name', 'description','shifts'
             )
 
 class ShiftSerializer(serializers.ModelSerializer):

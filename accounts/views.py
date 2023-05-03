@@ -107,7 +107,7 @@ class GoogleLogin(SocialLoginView):
 
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
-
+import environ
 from rest_framework_simplejwt.tokens import RefreshToken
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -141,22 +141,26 @@ class UserRegistartionView(APIView):
 
             except:
                 pass
+
+            token = get_random_string(length=32)
+            verify_link = "http://127.0.0.1:8000" + '/email-verify/' + token
+
             email_sent = send_mail(
                 'Your MaxPilot login details',
-                f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
+                f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nConfrm you email by clicking this link \n {verify_link}\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
 
             )
             # Tokens
-            refresh = RefreshToken.for_user(user)
-            access = str(refresh.access_token)
-            tokens = {
-                "refresh": str(refresh),
-                "access": str(access)
-            }
-            return Response({'data': "User created successfully, please check you email for login credentials","tokens": tokens}, status.HTTP_200_OK)
+            # refresh = RefreshToken.for_user(user)
+            # access = str(refresh.access_token)
+            # tokens = {
+            #     "refresh": str(refresh),
+            #     "access": str(access)
+            # }
+            return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
             print("message", e)
