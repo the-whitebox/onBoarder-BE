@@ -155,7 +155,7 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = (
-            'id', 'name', 'description','shifts'
+            'id', 'name', 'description','date','shifts'
             )
 
 class ShiftSerializer(serializers.ModelSerializer):

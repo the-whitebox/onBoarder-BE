@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from accounts.models import User
 from business.models import Business,Location,Area,OperatingHours,Shift,Template
-from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer
+from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer,TemplateSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
     viewsets, views,
@@ -458,24 +458,34 @@ class ShiftImportView(APIView):
         serializer = self.serializer_class(imported_shifts)
         return Response(serializer.data)
     
-
+# Save Tempplate
 class SaveTemplate(APIView):
     def post(self,request):
         location_id = self.request.GET.get('location_id')
-        shifts = Shift.objects.filter(location=location_id)
         name = request.data.get('name')
+        today = datetime.date.today()
         description = request.data.get('description')
-        print(shifts)
+        if location_id:
+            shifts = Shift.objects.filter(location=location_id)
+        else:
+            shifts = Shift.objects.all()
         if shifts:
-            all_temp = Template.objects.all()
-            temp = Template.objects.create(name=name,description=description)
-            all_temp.append(temp)
-            for shift in shifts:
-                shift.shifts_template.set(all_temp)
-                shift.save()
+            temp = Template.objects.create(name=name,description=description,date=today)
+            temp.shifts.set(shifts)
             return Response("Template Created, all shifts has been copied")
+        else:
+            return Response("Please create shifts first")
         
-        
+# Load Template
+class LoadTemplate(viewsets.ModelViewSet):
+    serializer_class = TemplateSerializer
+    def get_queryset(self):
+        template_id = self.request.GET.get('template_id')
+        if template_id:
+            queryset = Template.objects.filter(id=template_id)
+            return queryset
+        else:
+            return Response("Please provide location ID")
 # Clone Shifts
 class ShiftCloneView(APIView):
     serializer_class = ShiftSerializer
@@ -515,6 +525,7 @@ class DownloadWithCsv(APIView):
         for obj in all_shifts:
             writer.writerow([obj.location.location_name,obj.user, obj.area, obj.start,obj.finish,obj.start_date,obj.end_date,obj.publish,obj.shift_type])
         return response
+    
 # Send Offers api
 class SendOffers(APIView):
     serializer_class = ShiftSerializer
@@ -553,4 +564,3 @@ class ViewShiftHistory(APIView):
             })
         else:
             return Response("Please provide Shift ID")
-        

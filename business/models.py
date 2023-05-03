@@ -96,6 +96,7 @@ class Break(MaxPilotBaseModel):
 class Template(MaxPilotBaseModel):
     name = models.CharField(max_length=100,unique=True)
     description = models.TextField(null=True,blank=True)
+    date = models.DateField(default=timezone.now)
     shifts = models.ManyToManyField(Shift,related_name="shifts_template")
     def __str__(self):
         return self.name

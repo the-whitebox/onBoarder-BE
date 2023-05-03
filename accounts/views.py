@@ -138,12 +138,12 @@ class UserRegistartionView(APIView):
                     myuser = UserProfile.objects.get(user=user)
                     Document.objects.create(content_object=myuser, image=request.FILES['image'])
                         # return Response("image saved")
-
             except:
                 pass
 
             token = get_random_string(length=32)
-            verify_link = "http://127.0.0.1:8000" + '/email-verify/' + token
+            HOST = "http://localhost:3000"
+            verify_link = HOST + '/email-verify/' + token
             user.email_verified_hash = token
             user.save()
             email_sent = send_mail(
