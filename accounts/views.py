@@ -144,7 +144,8 @@ class UserRegistartionView(APIView):
 
             token = get_random_string(length=32)
             verify_link = "http://127.0.0.1:8000" + '/email-verify/' + token
-
+            user.email_verified_hash = token
+            user.save()
             email_sent = send_mail(
                 'Your MaxPilot login details',
                 f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nConfrm you email by clicking this link \n {verify_link}\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
@@ -167,6 +168,33 @@ class UserRegistartionView(APIView):
             LOG.error('User %s: Profile is not created' % (username,), e)
             return Response({'error': 'Profile is not created'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+# Verification of E-mail
+import json
+from django.http import JsonResponse
+class VerificationEmail(APIView):
+    def get(self,request):
+            data = json.loads(request.body.decode('utf-8'))
+            print(data)
+            token = data['token']
+            print(token)
+            res = {
+                'status': 'success',
+                'message': 'Valid',
+            }
+            print(res)    
+            if User.objects.filter(email_verified_hash=token, email_verified=0).exists():
+                tokenExists = User.objects.get(email_verified_hash=token, email_verified=0)
+
+                tokenExists.email_verified = 1
+                tokenExists.save()
+
+            else:
+                res = {
+                    'status': 'failed',
+                    'message': 'Invalid',
+                }
+            
+            return JsonResponse(res) 
 
 class InvitationLinkView(APIView):
     def get(self, *args, **kwargs):

@@ -51,7 +51,6 @@ class UserProfile(MaxPilotBaseModel):
 
     display_name = models.CharField(_('full name'), max_length=150, blank=True)
     full_name = models.CharField(max_length=70, blank=True, null=True)
-
     state = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=255, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
@@ -109,7 +108,8 @@ class User(AbstractUser, MaxPilotBaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True,blank=True)
     business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
     user_location = models.ForeignKey(Location,related_name='people', on_delete=models.SET_NULL, null=True, blank=True)
-
+    email_verified_hash = models.CharField(max_length=200,null=True,blank=True)
+    email_verified = models.BooleanField(default=0)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'profile']

@@ -128,7 +128,7 @@ class UserSerializer(serializers.ModelSerializer):
         depth = 0
         model = User
         fields = (
-            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business','user_location', 'password', 'username',
+            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business','user_location','email_verified_hash','email_verified', 'password', 'username',
             'email', 'user_status', 'is_active', 'profile', 'work_detail', 'pay_detail', 'working_hours', 'leave_entitlements'
         )
         # read_only_fields = ('groups', )
