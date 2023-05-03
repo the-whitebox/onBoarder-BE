@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from accounts.models import User
-from business.models import Business,Location,Area,OperatingHours,Shift
+from business.models import Business,Location,Area,OperatingHours,Shift,Template
 from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
@@ -457,6 +457,26 @@ class ShiftImportView(APIView):
                     imported_shifts = Shift.objects.filter(location=location,area=area,start_date=date).first()
         serializer = self.serializer_class(imported_shifts)
         return Response(serializer.data)
+
+    
+# Save Template 
+class SaveTemplate(APIView):
+    def post(self,request):
+        location_id = self.request.GET.get('location_id')
+        shifts = Shift.objects.filter(location=location_id)
+        name = request.data.get('name')
+        description = request.data.get('description')
+        print(shifts)
+        if shifts:
+            mytemp = []
+            temp = Template.objects.create(name=name,description=description)
+            for shift in shifts:
+                shift.template = temp
+                mytemp.append(shift.template)
+                shift.template = mytemp
+                shift.save()
+            return Response("Template Created, all shifts has been copied")
+
 # Clone Shifts
 class ShiftCloneView(APIView):
     serializer_class = ShiftSerializer
@@ -521,17 +541,16 @@ class SendOffers(APIView):
         shift.save()
         serializer = self.serializer_class(shift)
         return Response(serializer.data)
-
+# View Shift History
 class ViewShiftHistory(APIView):
     def get(self,request):
         shift_id = int(self.request.GET.get('shift_id',None))
-        print(shift_id)
-        if shift_id:
+        try:
             shift = Shift.objects.get(id=shift_id)
             return Response({
                 "Created_by": shift.user.username,
                 "Date" : shift.start_date
             })
-        else:
+        except:
             return Response("Please provide Shift ID")
-        
+

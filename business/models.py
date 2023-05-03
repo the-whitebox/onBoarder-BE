@@ -68,6 +68,13 @@ class OperatingHours(MaxPilotBaseModel):
     is_closed = models.BooleanField(default=False)
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
 
+
+class Template(MaxPilotBaseModel):
+    name = models.CharField(max_length=100,unique=True)
+    description = models.TextField(null=True,blank=True)
+    def __str__(self):
+        return self.name
+
 class Shift(MaxPilotBaseModel):
     # Open = "Open"
     # Empty = "Empty"
@@ -85,6 +92,7 @@ class Shift(MaxPilotBaseModel):
     publish = models.BooleanField(default=False)
     shift_type = models.PositiveIntegerField()
     location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
+    shift_template = models.ForeignKey(Template,related_name='shift_template', on_delete=models.SET_NULL,null=True)
 
 class Break(MaxPilotBaseModel):
     break_type = models.CharField(max_length=100, default="Meal break")
@@ -92,8 +100,6 @@ class Break(MaxPilotBaseModel):
     start = models.TimeField()
     finish = models.TimeField()
     shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
-
-
 
 
 
