@@ -1,8 +1,8 @@
-from django.urls import path, include,re_path
+from django.urls import path, include
 from rest_framework import routers
 
 from dj_rest_auth.registration.views import (
-    SocialAccountListView, SocialAccountDisconnectView,VerifyEmailView
+    SocialAccountListView, SocialAccountDisconnectView,
 )
 
 from dj_rest_auth.views import PasswordResetConfirmView
@@ -27,13 +27,12 @@ router.register(r'role', RoleViewSet, basename='role')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path(
+        'auth/password/reset/confirm/<slug:uidb64>/<slug:token>/',
+        PasswordResetConfirmView.as_view(), name='password_reset_confirm'
+    ),
     path('auth/', include('dj_rest_auth.urls')),
     path('auth/user/registration/', UserRegistartionView.as_view()),
-    path('auth/verify_email/', VerifyEmailView.as_view(),name='rest_verify_email'),
-    path('auth/account_confirm_email/', VerifyEmailView.as_view(),name='account_email_verification_sent'),
-    re_path(r'^auth/user/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
-         VerifyEmailView.as_view(), name='account_confirm_email'),
-
     path('invitation_link/', InvitationLinkView.as_view()),
     # path('auth/business/registration/', ),
     path('accounts/', include('allauth.urls')),

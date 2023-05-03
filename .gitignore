@@ -4,4 +4,3 @@ venv/
 media/
 static/
 .config/
-db.sqlite3

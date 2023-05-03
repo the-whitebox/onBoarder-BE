@@ -150,13 +150,13 @@ class UserRegistartionView(APIView):
 
             )
             # Tokens
-            # refresh = RefreshToken.for_user(user)
-            # access = str(refresh.access_token)
-            # tokens = {
-            #     "refresh": str(refresh),
-            #     "access": str(access)
-            # }
-            return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
+            refresh = RefreshToken.for_user(user)
+            access = str(refresh.access_token)
+            tokens = {
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+            return Response({'data': "User created successfully, please check you email for login credentials","tokens": tokens}, status.HTTP_200_OK)
             
         except Exception as e:
             print("message", e)

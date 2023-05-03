@@ -151,20 +151,12 @@ class BreakSerializer(serializers.ModelSerializer):
             'id', 'break_type', 'duration', 'start','finish','shift'
             )
 
-class TemplateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Break
-        fields = (
-            'id', 'name', 'description'
-            )
-
 class ShiftSerializer(serializers.ModelSerializer):
     shift_break = BreakSerializer(required=False,many=True)
-    shift_template = TemplateSerializer(required=False,many=True)
     class Meta:
         model = Shift
         fields = (
-            'id', 'user', 'area', 'start','finish','start_date','end_date','publish','shift_type','location','shift_break','shift_template'
+            'id', 'user', 'area', 'start','finish','start_date','end_date','publish','shift_type','location','shift_break'
             )
     
     def create(self,validated_data):
@@ -174,6 +166,7 @@ class ShiftSerializer(serializers.ModelSerializer):
         if shift_break_data:
             for data in shift_break_data:
                 break_ = Break.objects.create(shift=shift, **data)
+
         return shift
     
     def update(self, instance, validated_data):

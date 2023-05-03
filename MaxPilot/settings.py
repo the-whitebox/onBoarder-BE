@@ -102,11 +102,11 @@ AUTH_USER_MODEL = 'accounts.User'
 REST_USE_JWT = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-LOGIN_URL = 'http://localhost:8000/api/auth/login'
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+# ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+# LOGIN_URL = 'http://localhost:8000/api/auth/login'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -244,9 +244,8 @@ EMAIL_USE_SSL = False
 timeout=30
 
 
+
 REST_AUTH_SERIALIZERS   = {
-    'PASSWORD_RESET_SERIALIZER': 'accounts.serializers.CustomPasswordResetSerializer',
-    'USER_DETAILS_SERIALIZER': 'accounts.serializers.UserProfileSerializer'
-
+    'PASSWORD_RESET_SERIALIZER': 
+        'accounts.serializers.CustomPasswordResetSerializer',
 }
-
