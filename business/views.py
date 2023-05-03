@@ -145,7 +145,8 @@ class ShowSchedules(viewsets.ModelViewSet):
                     return Shift.objects.filter(start_date__gte=first_day_of_month,end_date__lte=last_day_of_month,location=location_id,area=area_id)
                 
                 if string == "day_by_team_member":
-                    today = timezone.now().date()      
+                    today = timezone.now().date() 
+                    print(today)     
                     shifts = Shift.objects.filter(start_date__gte=today,location=location_id,area=area_id,user=user)
                     return shifts
                 if string == "week_by_team_member":
@@ -390,3 +391,147 @@ class PublishShift(APIView):
                 return Response("Shift Unpublished, Change value of publish to True.")
         else:
             return Response(f"Object with ID {shift_id} does not exists.")
+
+# Copy Shifts
+import datetime
+class ShiftCopyView(APIView):
+    serializer_class = ShiftSerializer
+    def post(self, request):
+        location = self.request.GET.get('location')
+        string = self.request.GET.get('string')
+        today = datetime.date.today()
+        previous_day = today - timedelta(days=1)
+        next_day = today + timedelta(days=1)
+        original_instance = Shift.objects.filter(location=location).last()
+        if string == "copy to next day":
+            copied_instance = Shift.objects.create(
+                user = original_instance.user,
+                area = original_instance.area,
+                start = original_instance.start,
+                finish = original_instance.finish,
+                start_date = next_day,
+                end_date = original_instance.end_date,
+                publish = original_instance.publish,
+                shift_type = original_instance.shift_type,
+                location = original_instance.location
+            )
+            copied_instance.save()
+            serializer = self.serializer_class(copied_instance)
+            return Response(serializer.data)
+        if string == "copy from previous day":
+            print(original_instance.start_date)
+            if original_instance.start_date == previous_day:
+                copied_instance = Shift.objects.create(
+                    user = original_instance.user,
+                    area = original_instance.area,
+                    start = original_instance.start,
+                    finish = original_instance.finish,
+                    start_date = today,
+                    end_date = original_instance.end_date,
+                    publish = original_instance.publish,
+                    shift_type = original_instance.shift_type,
+                    location = original_instance.location
+                )
+                copied_instance.save()
+                serializer = self.serializer_class(copied_instance)
+                return Response(serializer.data)
+            else:
+                return Response("Shifts with previous day not found")
+# Import Shifts
+class ShiftImportView(APIView):
+    serializer_class = ShiftSerializer
+    def get(self, request):
+        location = self.request.GET.get('location')
+        string = self.request.GET.get('string')
+        area = self.request.GET.get('area')
+        date = self.request.GET.get('date')
+        today = datetime.date.today()
+        previous_day = today - timedelta(days=1)
+        print(previous_day)
+        if string == "previous day":
+            if area:
+                imported_shifts = Shift.objects.filter(location=location,area=area,start_date=previous_day).first()
+        if string == "choose date":
+            if date:
+                if area:
+                    imported_shifts = Shift.objects.filter(location=location,area=area,start_date=date).first()
+        serializer = self.serializer_class(imported_shifts)
+        return Response(serializer.data)
+# Clone Shifts
+class ShiftCloneView(APIView):
+    serializer_class = ShiftSerializer
+    def post(self, request):
+        location = self.request.GET.get('location')
+        area = self.request.GET.get('area')
+        no_of_shifts = int(self.request.GET.get('no_of_shifts'))
+        original_instance = Shift.objects.filter(location=location,area=area).first()
+        for shifts in range(no_of_shifts):
+            copied_instance = Shift.objects.create(
+                user = original_instance.user,
+                area = original_instance.area,
+                start = original_instance.start,
+                finish = original_instance.finish,
+                start_date = original_instance.start_date,
+                end_date = original_instance.end_date,
+                publish = original_instance.publish,
+                shift_type = original_instance.shift_type,
+                location = original_instance.location
+            )
+            copied_instance.save()
+            serializer = self.serializer_class(copied_instance)
+            shifts = shifts + 1
+        return Response(serializer)
+    
+# download with Csv
+import csv
+from django.http import HttpResponse
+class DownloadWithCsv(APIView):
+    serializer_class = ShiftSerializer
+    def get(self, request):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="data.csv"'
+        writer = csv.writer(response)
+        all_shifts = Shift.objects.all()
+        writer.writerow(['location','user', 'area', 'start','finish', 'start_date', 'end_date','publish','shift_type'])
+        for obj in all_shifts:
+            writer.writerow([obj.location.location_name,obj.user, obj.area, obj.start,obj.finish,obj.start_date,obj.end_date,obj.publish,obj.shift_type])
+        return response
+# Send Offers api
+class SendOffers(APIView):
+    serializer_class = ShiftSerializer
+    def patch(self, request):
+        shift_id = request.data.get('shift_id', None)
+        user_ids = request.data.get('users', None)
+        shift = Shift.objects.get(id=shift_id)
+        if shift:
+            if user_ids:
+                for user_id in user_ids:
+                    user = User.objects.get(id=user_id)
+                    shift.user = user
+                    shift.shift_type = 2
+                    email_sent = send_mail(
+                        'Dupty',
+                        'Your MaxPilot Shift details: you are invited for a shift',
+                        settings.EMAIL_HOST_USER,
+                        [shift.user.email],
+                        fail_silently = False,
+                    )
+        else:
+            return Response("Shift with provided ID does not Exists")
+        shift.save()
+        serializer = self.serializer_class(shift)
+        return Response(serializer.data)
+
+class ViewShiftHistory(APIView):
+    def get(self,request):
+        shift_id = int(self.request.GET.get('shift_id',None))
+        print(shift_id)
+        if shift_id:
+            shift = Shift.objects.get(id=shift_id)
+            return Response({
+                "Created_by": shift.user.username,
+                "Date" : shift.start_date
+            })
+        else:
+            return Response("Please provide Shift ID")
+        
