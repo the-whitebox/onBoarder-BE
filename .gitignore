@@ -1,5 +1,6 @@
 *.pyc
 .idea/
 venv/
-media
-static
+media/
+static/
+.config/
