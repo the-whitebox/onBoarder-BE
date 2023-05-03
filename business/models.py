@@ -1,9 +1,10 @@
 from django.db import models
 from MaxPilot.models import MaxPilotBaseModel
-
+from django.core.exceptions import ValidationError
+from datetime import datetime
+from django.utils import timezone
 # Create your models here.
 class Business(MaxPilotBaseModel):
-
     business_name = models.CharField(max_length=70, blank=True, null=True)
     mobile_number = models.CharField(null=True, blank=True, max_length=255)
     business_type = models.PositiveIntegerField(null=True,blank=True)
@@ -16,6 +17,84 @@ class Business(MaxPilotBaseModel):
 
     def __str__(self):
         return str(self.business_name)
+
+class Location(MaxPilotBaseModel):
+    location_name = models.CharField(max_length=200)
+    location_code = models.CharField(max_length=3, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.location_code = self.location_name[:3].upper()
+        super(Location, self).save(*args, **kwargs)
+    location_address = models.CharField(max_length=500, default=None)
+    timezone = models.CharField(max_length=50, default='Asia/karachi')
+    location_week_starts_on = models.PositiveIntegerField()    
+    business_location = models.ForeignKey(Business,related_name='business_location', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.location_name)
+    
+class Area(MaxPilotBaseModel):
+    physical_address = models.BooleanField(default=False,null=True,blank=True)
+    area_of_work = models.CharField(max_length=50,null=True,blank=True)
+    address = models.CharField(max_length=500,null=True,blank=True)
+    location = models.ForeignKey(Location,related_name='areas', on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        return self.area_of_work
+
+class OperatingHours(MaxPilotBaseModel):
+    Monday = "Monday"
+    Tuesday = "Tuesday"
+    Wednesday = "Wednesday"
+    Thursday = "Thursday"
+    Friday = "Friday"
+    Saturday = "Saturday"
+    Sunday = "Sunday"
+
+    DAYS_OF_WEEK = (
+        (Monday, 'Monday'),
+        (Tuesday, 'Tuesday'),
+        (Wednesday, 'Wednesday'),
+        (Thursday, 'Thursday'),
+        (Friday, 'Friday'),
+        (Saturday, 'Saturday'),
+        (Sunday, 'Sunday'),
+    )
+    days = models.CharField(max_length=9, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField(default='09:00')
+    end_time = models.TimeField(default='05:00')
+    def clean(self):
+        if self.end_time <= self.start_time:
+            raise ValidationError('End time must be after start time.')
+    is_closed = models.BooleanField(default=False)
+    location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
+
+class Shift(MaxPilotBaseModel):
+    # Open = "Open"
+    # Empty = "Empty"
+    # shift_choices = (
+    # (Open, 'Open'),
+    # (Empty, 'Empty'),
+
+    # )
+    user = models.ForeignKey("accounts.User",on_delete=models.CASCADE)
+    area = models.ForeignKey(Area,related_name='areas',on_delete=models.CASCADE)
+    start = models.TimeField()
+    finish = models.TimeField()
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField(default=timezone.now)
+    publish = models.BooleanField(default=False)
+    shift_type = models.PositiveIntegerField()
+    location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
+
+class Break(MaxPilotBaseModel):
+    break_type = models.CharField(max_length=100, default="Meal break")
+    duration = models.TimeField(default="15")
+    start = models.TimeField()
+    finish = models.TimeField()
+    shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
+
+
+
 
 
 # HEALTHCARE = "Healthcare"

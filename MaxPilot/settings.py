@@ -187,7 +187,6 @@ REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.UserSerializer'
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -242,6 +241,7 @@ EMAIL_HOST_PASSWORD = 'jbfzjatisvddvhdh'
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
+timeout=30
 
 
 

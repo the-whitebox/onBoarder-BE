@@ -9,3 +9,4 @@ Pillow
 drf-yasg
 django-invitations
 htmlmin
+djangorestframework-jwt

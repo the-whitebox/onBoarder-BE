@@ -128,7 +128,7 @@ class UserSerializer(serializers.ModelSerializer):
         depth = 0
         model = User
         fields = (
-            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business', 'password', 'username',
+            'id', 'url', 'first_name', 'last_name', 'is_superuser', 'role', 'business','user_location', 'password', 'username',
             'email', 'user_status', 'is_active', 'profile', 'work_detail', 'pay_detail', 'working_hours', 'leave_entitlements'
         )
         # read_only_fields = ('groups', )
@@ -177,12 +177,12 @@ class UserSerializer(serializers.ModelSerializer):
         return user
         
     def update(self, instance, validated_data):
-        profile_data = validated_data.pop('profile')
+        profile_data = validated_data.pop('profile', None)
         work_detail_data = validated_data.pop('work_detail', None)
         pay_detail_data = validated_data.pop('pay_detail', None)
         working_hours_data = validated_data.pop('working_hours', None)
         leave_entitlements_data = validated_data.pop('leave_entitlements', None)
-
+        print(instance.leave_entitlements)
         profile = instance.profile
         work_detail = instance.work_detail
         pay_detail = instance.pay_detail
