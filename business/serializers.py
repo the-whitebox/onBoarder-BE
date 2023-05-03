@@ -38,7 +38,7 @@ class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = (
-            'physical_address', 'area_of_work', 'address', 'location'
+            'id','physical_address', 'area_of_work', 'address', 'location'
             )
 class LocationSerializer(serializers.ModelSerializer):
     areas = AreaSerializer(required=False,many=True)
