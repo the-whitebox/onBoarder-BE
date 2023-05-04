@@ -117,6 +117,8 @@ class UserRegistartionView(APIView):
         try:
             username = self.request.data.get('username')
             email = self.request.data.get('email')
+            password = self.request.data.get('password')
+
             if User.objects.filter(Q(email=email) | Q(username=username)).exists():
                 return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
@@ -129,9 +131,13 @@ class UserRegistartionView(APIView):
 
             
             user = User.objects.create(email=email, role=role, username=username, profile=user_profile)
-            password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
-            user.set_password(password)
-            user.save()
+            if password:
+                user.set_password(password)
+                user.save()
+            else:
+                password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+                user.set_password(password)
+                user.save()
             try:
                 if request.FILES['image'] is not None:
                     print(request.FILES['image'])
@@ -140,7 +146,6 @@ class UserRegistartionView(APIView):
                         # return Response("image saved")
             except:
                 pass
-
             token = get_random_string(length=32)
             HOST = "http://localhost:3000"
             verify_link = HOST + '/email-verify/' + token
@@ -152,15 +157,7 @@ class UserRegistartionView(APIView):
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
-
             )
-            # Tokens
-            # refresh = RefreshToken.for_user(user)
-            # access = str(refresh.access_token)
-            # tokens = {
-            #     "refresh": str(refresh),
-            #     "access": str(access)
-            # }
             return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
@@ -171,29 +168,34 @@ class UserRegistartionView(APIView):
 # Verification of E-mail
 import json
 from django.http import JsonResponse
+
 class VerificationEmail(APIView):
+    permission_classes = (permissions.AllowAny,)
     def get(self,request):
             data = json.loads(request.body.decode('utf-8'))
-            print(data)
-            token = data['token']
-            print(token)
-            res = {
-                'status': 'success',
-                'message': 'Valid',
-            }
-            print(res)    
+            if data:
+                token = data['token']
+            else:
+                return Response("Please provide token")
             if User.objects.filter(email_verified_hash=token, email_verified=0).exists():
                 tokenExists = User.objects.get(email_verified_hash=token, email_verified=0)
-
+                refresh = RefreshToken.for_user(tokenExists)
+                access = str(refresh.access_token)
                 tokenExists.email_verified = 1
                 tokenExists.save()
+                print(tokenExists.email_verified)
 
+                res = {
+                'status': 'success',
+                'message': 'Valid',
+                "refresh": str(refresh),
+                "access": str(access)
+            }
             else:
                 res = {
                     'status': 'failed',
                     'message': 'Invalid',
                 }
-            
             return JsonResponse(res) 
 
 class InvitationLinkView(APIView):
