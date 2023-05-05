@@ -168,10 +168,9 @@ class UserRegistartionView(APIView):
 # Verification of E-mail
 import json
 from django.http import JsonResponse
-
 class VerificationEmail(APIView):
     permission_classes = (permissions.AllowAny,)
-    def get(self,request):
+    def post(self,request):
             data = json.loads(request.body.decode('utf-8'))
             if data:
                 token = data['token']
@@ -182,12 +181,11 @@ class VerificationEmail(APIView):
                 refresh = RefreshToken.for_user(tokenExists)
                 access = str(refresh.access_token)
                 tokenExists.email_verified = 1
-                tokenExists.save()
-                print(tokenExists.email_verified)
-
+                tokenExists.save()                
                 res = {
                 'status': 'success',
                 'message': 'Valid',
+                'user_id':tokenExists.id,
                 "refresh": str(refresh),
                 "access": str(access)
             }
@@ -197,6 +195,33 @@ class VerificationEmail(APIView):
                     'message': 'Invalid',
                 }
             return JsonResponse(res) 
+
+# Custom login
+from dj_rest_auth.views import LoginView
+from rest_framework.authtoken.models import Token
+
+class CustomLoginView(LoginView):
+    def get_response(self):
+        self.serializer.is_valid(raise_exception=True)
+        user = self.serializer.validated_data['user']
+        orginal_response = super().get_response()
+        print(user.email_verified)
+        if user.email_verified == False:
+            return Response({'detail': 'User not verified.'},status=status.HTTP_401_UNAUTHORIZED)
+        mydata = {"message": "Login Successful", "status": "success"}
+        orginal_response.data.update(mydata)
+        return orginal_response
+
+    # def login(self):
+    #     print("this")
+    #     self.serializer.is_valid(raise_exception=True)
+    #     user = self.serializer.validated_data['user']
+    #     token, created = Token.objects.get_or_create(user=user)
+    #     if user.email_verified == True:
+            
+    #         return Response({'detail': 'User account is Login.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    #     return Response({'key': token.key})
 
 class InvitationLinkView(APIView):
     def get(self, *args, **kwargs):

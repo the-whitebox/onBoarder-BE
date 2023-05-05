@@ -152,18 +152,13 @@ class BreakSerializer(serializers.ModelSerializer):
             )
         
 class TemplateSerializer(serializers.ModelSerializer):
-    # no_of_shifts = serializers.SerializerMethodField(read_only=True)
-    # @staticmethod
-    # def get_no_of_shifts(obj):
-    #     # shifts = Template.objects.all()
-    #     # no_of_shifts = len(shifts)
-    #     return obj.no_of_shifts
     class Meta:
+        depth = 1
         model = Template
         fields = (
             'id', 'name', 'description','date','shifts'
             )
-
+    
 class ShiftSerializer(serializers.ModelSerializer):
     shift_break = BreakSerializer(required=False,many=True)
     class Meta:

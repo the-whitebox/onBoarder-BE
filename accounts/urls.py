@@ -13,7 +13,7 @@ from accounts.views import (
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
     InvitationLinkView,CsvReader,
-    CsvNewUsers,EnumsReturn,RoleViewSet,VerificationEmail
+    CsvNewUsers,EnumsReturn,RoleViewSet,VerificationEmail,CustomLoginView
 )
 
 router = routers.DefaultRouter()
@@ -31,7 +31,9 @@ urlpatterns = [
         'auth/password/reset/confirm/<slug:uidb64>/<slug:token>/',
         PasswordResetConfirmView.as_view(), name='password_reset_confirm'
     ),
+    path('auth/login/', CustomLoginView.as_view()),
     path('auth/', include('dj_rest_auth.urls')),
+
     path('auth/user/registration/', UserRegistartionView.as_view()),
     path('invitation_link/', InvitationLinkView.as_view()),
     # path('auth/business/registration/', ),

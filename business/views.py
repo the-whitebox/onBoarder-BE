@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from accounts.models import User
-from business.models import Business,Location,Area,OperatingHours,Shift,Template
+from business.models import Business,Location,Area,OperatingHours,Shift,Template,Break
 from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer,TemplateSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
@@ -507,8 +507,8 @@ class LoadTemplate(viewsets.ModelViewSet):
     def get_queryset(self):
         template_id = self.request.GET.get('template_id')
         if template_id:
-            serializer_class = ShiftSerializer
-            all_data = []
+            # shift_serializer_class = ShiftSerializer
+            data = []
             queryset = Template.objects.filter(id=template_id)
             for data in queryset:
                 shifts = data.shifts.all()
@@ -524,10 +524,13 @@ class LoadTemplate(viewsets.ModelViewSet):
                     publish = shift.publish,
                     shift_type = shift.shift_type,
                     location = shift.location
-                )
-                    serializer = serializer_class(copied_instance)
-                    all_data.append(serializer.data)
-            return all_data
+                    )
+                    print("sgift created", copied_instance.id)
+                    data.shifts.add(copied_instance)
+                    # print("data", data)
+                    # serializer = shift_serializer_class(copied_instance)
+                    # all_data.append(serializer.data)
+            return queryset
         else:
             queryset = Template.objects.all()
             return queryset
@@ -627,13 +630,10 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 class PrintByArea(APIView):
     def get(self,request):
         buffer = io.BytesIO()
-        # Create the PDF object, using the BytesIO object as its "file."
         pdf = canvas.Canvas(buffer, pagesize=letter)
         business_id = self.request.GET.get("business_id")
         business = Business.objects.get(id=business_id)
         today = datetime.date.today()
-        print(str(today))
-        # Draw canvas objects
         pdf.drawString(200, 750, "Schedule for "+ business.business_name)
         pdf.drawString(230, 730, str(today))
 
@@ -643,15 +643,30 @@ class PrintByArea(APIView):
         TOP_MARGIN = inch
         BOTTOM_MARGIN = inch
         usable_width = PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
-        usable_height = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN
-        num_columns = 1.1
+        # usable_height = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN
+        num_columns = 2.2
         column_widths = [usable_width / num_columns]
         locations = Location.objects.filter(business_location=business)
-        areas = Area.objects
         # data = []
         for location in locations:
             code = location.location_code
-            data = [[code], " ",[]]
+            areas = Area.objects.filter(location=location)
+            for area in areas:
+                myarea = area.area_of_work
+                shifts = Shift.objects.filter(location=location,area=area)
+                for shift in shifts:
+                    username = shift.user.username
+                    start = shift.start
+                    finish = shift.finish
+                    breaks = Break.objects.filter(shift=shift)
+                    for mybreak in breaks:
+                        duration = mybreak.duration
+            field = "[" + code + "]" + myarea
+            shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
+            data = [
+                ["",today],
+                [field,shift_data]
+                ]
         table = Table(data,colWidths=column_widths)
         table.setStyle(TableStyle([
             # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -669,7 +684,6 @@ class PrintByArea(APIView):
                                 leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
                                 topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
         doc.build([table])
-
         table.wrapOn(pdf, 10, 10)
         table.drawOn(pdf, 10, 640)
 
