@@ -33,10 +33,8 @@ urlpatterns = [
     ),
     path('auth/login/', CustomLoginView.as_view()),
     path('auth/', include('dj_rest_auth.urls')),
-
     path('auth/user/registration/', UserRegistartionView.as_view()),
     path('invitation_link/', InvitationLinkView.as_view()),
-    # path('auth/business/registration/', ),
     path('accounts/', include('allauth.urls')),
     path("invitations/", include('invitations.urls', namespace='invitations')),
 

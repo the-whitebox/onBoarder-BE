@@ -17,8 +17,6 @@ from dateutil.relativedelta import *
 from rest_framework.decorators import action
 from django.db import transaction
 # Create your views here.
-@authentication_classes([])
-@permission_classes([])
 class BusinessRegistrationViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
@@ -527,9 +525,6 @@ class LoadTemplate(viewsets.ModelViewSet):
                     )
                     print("sgift created", copied_instance.id)
                     data.shifts.add(copied_instance)
-                    # print("data", data)
-                    # serializer = shift_serializer_class(copied_instance)
-                    # all_data.append(serializer.data)
             return queryset
         else:
             queryset = Template.objects.all()
@@ -629,10 +624,13 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
 class PrintByArea(APIView):
     def get(self,request):
+        string = self.request.GET.get("string")
+        business_id = self.request.GET.get("business_id")
+        business = Business.objects.filter(id=business_id).first()
+
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer, pagesize=letter)
-        business_id = self.request.GET.get("business_id")
-        business = Business.objects.get(id=business_id)
+
         today = datetime.date.today()
         pdf.drawString(200, 750, "Schedule for "+ business.business_name)
         pdf.drawString(230, 730, str(today))
@@ -647,26 +645,31 @@ class PrintByArea(APIView):
         num_columns = 2.2
         column_widths = [usable_width / num_columns]
         locations = Location.objects.filter(business_location=business)
-        # data = []
-        for location in locations:
-            code = location.location_code
-            areas = Area.objects.filter(location=location)
-            for area in areas:
-                myarea = area.area_of_work
-                shifts = Shift.objects.filter(location=location,area=area)
-                for shift in shifts:
-                    username = shift.user.username
-                    start = shift.start
-                    finish = shift.finish
-                    breaks = Break.objects.filter(shift=shift)
-                    for mybreak in breaks:
-                        duration = mybreak.duration
-            field = "[" + code + "]" + myarea
-            shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
-            data = [
-                ["",today],
-                [field,shift_data]
-                ]
+        print(locations)
+        all_data = []
+        # if string == "day_by_area":
+        if locations:
+            for location in locations:
+                code = location.location_code
+                areas = Area.objects.filter(location=location)
+                for area in areas:
+                    myarea = area.area_of_work
+                    shifts = Shift.objects.filter(location=location,area=area)
+                    for shift in shifts:
+                        username = shift.user.username
+                        start = shift.start
+                        finish = shift.finish
+                        breaks = Break.objects.filter(shift=shift)
+                        for mybreak in breaks:
+                            duration = mybreak.duration
+                field = "[" + code + "]" + myarea
+                shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
+                data = [
+                    ["",today],
+                    [field,shift_data]
+                    ]
+            else:
+                data = []
         table = Table(data,colWidths=column_widths)
         table.setStyle(TableStyle([
             # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -679,10 +682,10 @@ class PrintByArea(APIView):
             # ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
-        
+    
         doc = SimpleDocTemplate('example.pdf', pagesize=landscape(letter),
-                                leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
-                                topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
+                            leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
+                            topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
         doc.build([table])
         table.wrapOn(pdf, 10, 10)
         table.drawOn(pdf, 10, 640)

@@ -106,7 +106,7 @@ class User(AbstractUser, MaxPilotBaseModel):
 
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True,blank=True)
-    business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True)
+    business = models.ManyToManyField(Business,related_name="business_user")
     user_location = models.ForeignKey(Location,related_name='people', on_delete=models.SET_NULL, null=True, blank=True)
     email_verified_hash = models.CharField(max_length=200,null=True,blank=True)
     email_verified = models.BooleanField(default=0)

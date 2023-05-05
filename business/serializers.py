@@ -14,13 +14,12 @@ class BusinessSerializer(serializers.ModelSerializer):
             'id', 'business_name', 'mobile_number', 'business_type', 'industry_type', 'employees_range', 'joining_purpose', 
             'payroll_type', 'pay_process_improvement_duration', 'how_you_hear'
             )
-        
     def create(self, validated_data):
         business = Business(**validated_data)
         business.save()
         try:
             user = User.objects.get(id=self.context.get('request', None).user.id if self.context.get('request', None) else 0)
-            user.business = business
+            user.business.add(business)
             user.save()
         except User.DoesNotExist:
             return Response({'error': 'user_not_found'},
