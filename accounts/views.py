@@ -31,8 +31,6 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from rest_framework.decorators import authentication_classes, permission_classes
-import jwt
-from rest_framework_jwt.utils import jwt_payload_handler
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -41,10 +39,14 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     def get_queryset(self):
-        queryset = super(UserViewSet, self).get_queryset()
-        if self.request.GET.get('business_id', None):
-            return User.objects.filter(business__id=self.request.GET.get('business_id'))
-        return queryset
+        business_id = self.request.GET.get('business_id',None)
+        business_id = business_id.split(',')
+        if business_id:
+            for business in business_id:
+                data = []
+                queryset =  User.objects.filter(business=business)
+                print(queryset)
+            return queryset
     
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
@@ -107,7 +109,7 @@ class GoogleLogin(SocialLoginView):
 
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
-
+import environ
 from rest_framework_simplejwt.tokens import RefreshToken
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -117,6 +119,8 @@ class UserRegistartionView(APIView):
         try:
             username = self.request.data.get('username')
             email = self.request.data.get('email')
+            password = self.request.data.get('password')
+
             if User.objects.filter(Q(email=email) | Q(username=username)).exists():
                 return Response({'data': f"User with {email} or {username} already exist."}, status.HTTP_400_BAD_REQUEST)
             user_profile = UserProfile.objects.create()
@@ -129,40 +133,97 @@ class UserRegistartionView(APIView):
 
             
             user = User.objects.create(email=email, role=role, username=username, profile=user_profile)
-            password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
-            user.set_password(password)
-            user.save()
+            if password:
+                user.set_password(password)
+                user.save()
+            else:
+                password = User.objects.make_random_password(length=10, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+                user.set_password(password)
+                user.save()
             try:
                 if request.FILES['image'] is not None:
                     print(request.FILES['image'])
                     myuser = UserProfile.objects.get(user=user)
                     Document.objects.create(content_object=myuser, image=request.FILES['image'])
                         # return Response("image saved")
-
             except:
                 pass
+            token = get_random_string(length=32)
+            HOST = "http://localhost:3000"
+            verify_link = HOST + '/email-verify/' + token
+            user.email_verified_hash = token
+            user.save()
             email_sent = send_mail(
                 'Your MaxPilot login details',
-                f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
+                f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nConfrm you email by clicking this link \n {verify_link}\nYour temporary password:\n\nEmail address: {email}\nPassword: {password}\n\nHappy scheduling!\nThe MaxPilot Team",
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently = False,
-
             )
-            # Tokens
-            refresh = RefreshToken.for_user(user)
-            access = str(refresh.access_token)
-            tokens = {
-                "refresh": str(refresh),
-                "access": str(access)
-            }
-            return Response({'data': "User created successfully, please check you email for login credentials","tokens": tokens}, status.HTTP_200_OK)
+            return Response({'data': "User created successfully, please check you email for login credentials"}, status.HTTP_200_OK)
             
         except Exception as e:
             print("message", e)
             LOG.error('User %s: Profile is not created' % (username,), e)
             return Response({'error': 'Profile is not created'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+# Verification of E-mail
+import json
+from django.http import JsonResponse
+class VerificationEmail(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def post(self,request):
+            data = json.loads(request.body.decode('utf-8'))
+            if data:
+                token = data['token']
+            else:
+                return Response("Please provide token")
+            if User.objects.filter(email_verified_hash=token, email_verified=0).exists():
+                tokenExists = User.objects.get(email_verified_hash=token, email_verified=0)
+                refresh = RefreshToken.for_user(tokenExists)
+                access = str(refresh.access_token)
+                tokenExists.email_verified = 1
+                tokenExists.save()                
+                res = {
+                'status': 'success',
+                'message': 'Valid',
+                'user_id':tokenExists.id,
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+            else:
+                res = {
+                    'status': 'failed',
+                    'message': 'Invalid',
+                }
+            return JsonResponse(res) 
+
+# Custom login
+from dj_rest_auth.views import LoginView
+from rest_framework.authtoken.models import Token
+
+class CustomLoginView(LoginView):
+    def get_response(self):
+        self.serializer.is_valid(raise_exception=True)
+        user = self.serializer.validated_data['user']
+        orginal_response = super().get_response()
+        print(user.email_verified)
+        if user.email_verified == False:
+            return Response({'detail': 'User not verified.'},status=status.HTTP_401_UNAUTHORIZED)
+        mydata = {"message": "Login Successful", "status": "success"}
+        orginal_response.data.update(mydata)
+        return orginal_response
+
+    # def login(self):
+    #     print("this")
+    #     self.serializer.is_valid(raise_exception=True)
+    #     user = self.serializer.validated_data['user']
+    #     token, created = Token.objects.get_or_create(user=user)
+    #     if user.email_verified == True:
+            
+    #         return Response({'detail': 'User account is Login.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    #     return Response({'key': token.key})
 
 class InvitationLinkView(APIView):
     def get(self, *args, **kwargs):

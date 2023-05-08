@@ -9,7 +9,8 @@ from business.views import (BusinessRegistrationViewSet,
                             RemoveEmptyShifts,MarkEmptyShiftsAsOpen,
                             ShowStatsforShifts,PublishShift,
                             ShiftCopyView,ShiftImportView,DownloadWithCsv,
-                            ShiftCloneView,SendOffers,ViewShiftHistory)
+                            ShiftCloneView,SendOffers,ViewShiftHistory
+                            ,SaveTemplate,LoadTemplate)
 
 router = routers.DefaultRouter()
 router.register(r'business', BusinessRegistrationViewSet, basename='business')
@@ -18,7 +19,7 @@ router.register(r'search_members', SearchMembers, basename='search_members')
 router.register(r'shift', ShiftViewSet, basename='shift')
 router.register(r'show_schedules', ShowSchedules, basename='show_schedules')
 router.register(r'show_schedules_by_date', ShowSchedulesByDate, basename='show_schedules_by_date')
-# router.register(r'copy_shift', ShiftCopyView, basename='copy_shift')
+router.register(r'load_template', LoadTemplate, basename='load_template')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -33,4 +34,6 @@ urlpatterns = [
     path('clone_shift/', ShiftCloneView.as_view(), name='clone_shift'),
     path('send_offers/', SendOffers.as_view(), name='send_offers'),
     path('shift_history/', ViewShiftHistory.as_view(), name='shift_history'),
+    path('save_template/', SaveTemplate.as_view(), name='save_template'),
+    # path('print_by_area/', PrintByArea.as_view(), name='print_by_area'),
 ]

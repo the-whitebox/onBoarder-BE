@@ -67,7 +67,7 @@ class OperatingHours(MaxPilotBaseModel):
             raise ValidationError('End time must be after start time.')
     is_closed = models.BooleanField(default=False)
     location = models.ForeignKey(Location,related_name='operating_hours', on_delete=models.CASCADE)
-
+    
 class Shift(MaxPilotBaseModel):
     # Open = "Open"
     # Empty = "Empty"
@@ -82,6 +82,9 @@ class Shift(MaxPilotBaseModel):
     finish = models.TimeField()
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(default=timezone.now)
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError('End date cannot be before start date')
     publish = models.BooleanField(default=False)
     shift_type = models.PositiveIntegerField()
     location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)
@@ -93,9 +96,13 @@ class Break(MaxPilotBaseModel):
     finish = models.TimeField()
     shift = models.ForeignKey(Shift,related_name='shifts_break', on_delete=models.CASCADE, null=True, blank=True)
 
-
-
-
+class Template(MaxPilotBaseModel):
+    name = models.CharField(max_length=100,unique=True)
+    description = models.TextField(null=True,blank=True)
+    date = models.DateField(default=timezone.now)
+    shifts = models.ManyToManyField(Shift,related_name="shifts_template")
+    def __str__(self):
+        return self.name
 
 # HEALTHCARE = "Healthcare"
     # RETAIL_HOSPITALITY = "Retail & Hospitality"
