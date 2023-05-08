@@ -627,86 +627,86 @@ class ViewShiftHistory(APIView):
             return Response("Please provide Shift ID")
 
 # print by area
-import io
-from reportlab.pdfgen import canvas
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter,landscape
-from reportlab.lib.units import inch
+# import io
+# from reportlab.pdfgen import canvas
+# from reportlab.lib import colors
+# from reportlab.lib.pagesizes import letter,landscape
+# from reportlab.lib.units import inch
 
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+# from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
-class PrintByArea(APIView):
-    def get(self,request):
-        string = self.request.GET.get("string")
-        business_id = self.request.GET.get("business_id")
-        business = Business.objects.filter(id=business_id).first()
+# class PrintByArea(APIView):
+#     def get(self,request):
+#         string = self.request.GET.get("string")
+#         business_id = self.request.GET.get("business_id")
+#         business = Business.objects.filter(id=business_id).first()
 
-        buffer = io.BytesIO()
-        pdf = canvas.Canvas(buffer, pagesize=letter)
+#         buffer = io.BytesIO()
+#         pdf = canvas.Canvas(buffer, pagesize=letter)
 
-        today = datetime.date.today()
-        pdf.drawString(200, 750, "Schedule for "+ business.business_name)
-        pdf.drawString(230, 730, str(today))
+#         today = datetime.date.today()
+#         pdf.drawString(200, 750, "Schedule for "+ business.business_name)
+#         pdf.drawString(230, 730, str(today))
 
-        PAGE_WIDTH, PAGE_HEIGHT = landscape(letter)
-        LEFT_MARGIN = inch
-        RIGHT_MARGIN = inch
-        TOP_MARGIN = inch
-        BOTTOM_MARGIN = inch
-        usable_width = PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
-        # usable_height = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN
-        num_columns = 2.2
-        column_widths = [usable_width / num_columns]
-        locations = Location.objects.filter(business_location=business)
-        print(locations)
-        all_data = []
-        # if string == "day_by_area":
-        if locations:
-            for location in locations:
-                code = location.location_code
-                areas = Area.objects.filter(location=location)
-                for area in areas:
-                    myarea = area.area_of_work
-                    shifts = Shift.objects.filter(location=location,area=area)
-                    for shift in shifts:
-                        username = shift.user.username
-                        start = shift.start
-                        finish = shift.finish
-                        breaks = Break.objects.filter(shift=shift)
-                        for mybreak in breaks:
-                            duration = mybreak.duration
-                field = "[" + code + "]" + myarea
-                shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
-                data = [
-                    ["",today],
-                    [field,shift_data]
-                    ]
-            else:
-                data = []
-        table = Table(data,colWidths=column_widths)
-        table.setStyle(TableStyle([
-            # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            # ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            # ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            # ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            # ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+#         PAGE_WIDTH, PAGE_HEIGHT = landscape(letter)
+#         LEFT_MARGIN = inch
+#         RIGHT_MARGIN = inch
+#         TOP_MARGIN = inch
+#         BOTTOM_MARGIN = inch
+#         usable_width = PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
+#         # usable_height = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN
+#         num_columns = 2.2
+#         column_widths = [usable_width / num_columns]
+#         locations = Location.objects.filter(business_location=business)
+#         print(locations)
+#         all_data = []
+#         # if string == "day_by_area":
+#         if locations:
+#             for location in locations:
+#                 code = location.location_code
+#                 areas = Area.objects.filter(location=location)
+#                 for area in areas:
+#                     myarea = area.area_of_work
+#                     shifts = Shift.objects.filter(location=location,area=area)
+#                     for shift in shifts:
+#                         username = shift.user.username
+#                         start = shift.start
+#                         finish = shift.finish
+#                         breaks = Break.objects.filter(shift=shift)
+#                         for mybreak in breaks:
+#                             duration = mybreak.duration
+#                 field = "[" + code + "]" + myarea
+#                 shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
+#                 data = [
+#                     ["",today],
+#                     [field,shift_data]
+#                     ]
+#             else:
+#                 data = []
+#         table = Table(data,colWidths=column_widths)
+#         table.setStyle(TableStyle([
+#             # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+#             # ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+#             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+#             # ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#             ('FONTSIZE', (0, 0), (-1, 0), 14),
+#             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+#             # ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+#             # ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+#             ('GRID', (0, 0), (-1, -1), 1, colors.black)
+#         ]))
     
-        doc = SimpleDocTemplate('example.pdf', pagesize=landscape(letter),
-                            leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
-                            topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
-        doc.build([table])
-        table.wrapOn(pdf, 10, 10)
-        table.drawOn(pdf, 10, 640)
+#         doc = SimpleDocTemplate('example.pdf', pagesize=landscape(letter),
+#                             leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
+#                             topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
+#         doc.build([table])
+#         table.wrapOn(pdf, 10, 10)
+#         table.drawOn(pdf, 10, 640)
 
-        pdf.showPage()
-        pdf.save()
+#         pdf.showPage()
+#         pdf.save()
 
-        buffer.seek(0)
-        response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="example.pdf"'
-        return response
+#         buffer.seek(0)
+#         response = HttpResponse(buffer, content_type='application/pdf')
+#         response['Content-Disposition'] = 'attachment; filename="example.pdf"'
+#         return response

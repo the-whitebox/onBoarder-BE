@@ -10,7 +10,7 @@ from business.views import (BusinessRegistrationViewSet,
                             ShowStatsforShifts,PublishShift,
                             ShiftCopyView,ShiftImportView,DownloadWithCsv,
                             ShiftCloneView,SendOffers,ViewShiftHistory
-                            ,SaveTemplate,LoadTemplate,PrintByArea)
+                            ,SaveTemplate,LoadTemplate)
 
 router = routers.DefaultRouter()
 router.register(r'business', BusinessRegistrationViewSet, basename='business')
@@ -35,5 +35,5 @@ urlpatterns = [
     path('send_offers/', SendOffers.as_view(), name='send_offers'),
     path('shift_history/', ViewShiftHistory.as_view(), name='shift_history'),
     path('save_template/', SaveTemplate.as_view(), name='save_template'),
-    path('print_by_area/', PrintByArea.as_view(), name='print_by_area'),
+    # path('print_by_area/', PrintByArea.as_view(), name='print_by_area'),
 ]
