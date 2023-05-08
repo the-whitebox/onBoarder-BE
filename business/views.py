@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from accounts.models import User
-from business.models import Business,Location,Area,OperatingHours,Shift
-from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer
+from business.models import Business,Location,Area,OperatingHours,Shift,Template,Break
+from business.serializers import BusinessSerializer,LocationSerializer,ShiftSerializer,TemplateSerializer
 from accounts.serializers import UserSerializer
 from rest_framework import (
     viewsets, views,
@@ -17,8 +17,6 @@ from dateutil.relativedelta import *
 from rest_framework.decorators import action
 from django.db import transaction
 # Create your views here.
-@authentication_classes([])
-@permission_classes([])
 class BusinessRegistrationViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
@@ -112,7 +110,6 @@ class SearchMembers(viewsets.ModelViewSet):
             return all_users
 
 class ShowSchedules(viewsets.ModelViewSet):
-
     queryset = Shift.objects.all()
     filter_backends = [filters.SearchFilter]
     serializer_class = ShiftSerializer
@@ -120,6 +117,8 @@ class ShowSchedules(viewsets.ModelViewSet):
         area_id = self.request.GET.get('area_id', None)
         string = self.request.GET.get('string', None)
         location_id = self.request.GET.get('location_id', None)
+        location_id = Location.objects.filter(id=location_id).first()
+        area_id = Area.objects.filter(id=area_id).first()
         user = User.objects.filter(user_location=location_id).first()
         if location_id:
             if area_id:
@@ -146,10 +145,16 @@ class ShowSchedules(viewsets.ModelViewSet):
                 
                 if string == "day_by_team_member":
                     today = timezone.now().date() 
-                    print(today)     
+                    print(today)
+                    print(location_id.id)
+                    print(area_id.id)
+                    print(user.id)
+
                     shifts = Shift.objects.filter(start_date__gte=today,location=location_id,area=area_id,user=user)
+                    print(shifts)
                     return shifts
                 if string == "week_by_team_member":
+                    print("this is weeek")
                     today = timezone.now().date()
                     start_of_week = today - timezone.timedelta(days=today.weekday())
                     end_of_week = start_of_week + timezone.timedelta(days=6)
@@ -399,34 +404,23 @@ class ShiftCopyView(APIView):
     def post(self, request):
         location = self.request.GET.get('location')
         string = self.request.GET.get('string')
+        from_date = self.request.GET.get('from_date')
+        to_date = self.request.GET.get('to_date')
+        area_id = self.request.GET.get('area_id')
+
         today = datetime.date.today()
         previous_day = today - timedelta(days=1)
+        print(previous_day)
         next_day = today + timedelta(days=1)
-        original_instance = Shift.objects.filter(location=location).last()
-        if string == "copy to next day":
-            copied_instance = Shift.objects.create(
-                user = original_instance.user,
-                area = original_instance.area,
-                start = original_instance.start,
-                finish = original_instance.finish,
-                start_date = next_day,
-                end_date = original_instance.end_date,
-                publish = original_instance.publish,
-                shift_type = original_instance.shift_type,
-                location = original_instance.location
-            )
-            copied_instance.save()
-            serializer = self.serializer_class(copied_instance)
-            return Response(serializer.data)
-        if string == "copy from previous day":
-            print(original_instance.start_date)
-            if original_instance.start_date == previous_day:
+        original_instance = Shift.objects.filter(location=location).first()
+        if original_instance:
+            if string == "copy to next day":
                 copied_instance = Shift.objects.create(
                     user = original_instance.user,
                     area = original_instance.area,
                     start = original_instance.start,
                     finish = original_instance.finish,
-                    start_date = today,
+                    start_date = next_day,
                     end_date = original_instance.end_date,
                     publish = original_instance.publish,
                     shift_type = original_instance.shift_type,
@@ -435,8 +429,49 @@ class ShiftCopyView(APIView):
                 copied_instance.save()
                 serializer = self.serializer_class(copied_instance)
                 return Response(serializer.data)
+            if string == "copy from previous day":
+                original_instance = Shift.objects.filter(location=location,start_date=previous_day).first()
+                if original_instance:
+                    copied_instance = Shift.objects.create(
+                        user = original_instance.user,
+                        area = original_instance.area,
+                        start = original_instance.start,
+                        finish = original_instance.finish,
+                        start_date = today,
+                        end_date = original_instance.end_date,
+                        publish = original_instance.publish,
+                        shift_type = original_instance.shift_type,
+                        location = original_instance.location
+                    )
+                    copied_instance.save()
+                    serializer = self.serializer_class(copied_instance)
+                    return Response(serializer.data)
+                else:
+                    return Response("Shifts with previous day does not exists")
+            
+        if string == "Advanced":
+            shifts = Shift.objects.filter(area=area_id,start_date=from_date)
+            if shifts is not None:
+                all_data = []
+                for shift in shifts:
+                    copied_instance = Shift.objects.create(
+                        user = shift.user,
+                        area = shift.area,
+                        start = shift.start,
+                        finish = shift.finish,
+                        start_date = to_date,
+                        end_date = shift.end_date,
+                        publish = shift.publish,
+                        shift_type = shift.shift_type,
+                        location = shift.location
+                    )
+                    serializer = self.serializer_class(copied_instance)
+                    all_data.append(serializer.data)
+                return Response(all_data)
             else:
-                return Response("Shifts with previous day not found")
+                return Response("No Shifts")
+        else:
+            return Response("Shifts not copied")
 # Import Shifts
 class ShiftImportView(APIView):
     serializer_class = ShiftSerializer
@@ -447,7 +482,6 @@ class ShiftImportView(APIView):
         date = self.request.GET.get('date')
         today = datetime.date.today()
         previous_day = today - timedelta(days=1)
-        print(previous_day)
         if string == "previous day":
             if area:
                 imported_shifts = Shift.objects.filter(location=location,area=area,start_date=previous_day).first()
@@ -457,30 +491,82 @@ class ShiftImportView(APIView):
                     imported_shifts = Shift.objects.filter(location=location,area=area,start_date=date).first()
         serializer = self.serializer_class(imported_shifts)
         return Response(serializer.data)
+    
+# Save Tempplate
+class SaveTemplate(APIView):
+    def post(self,request):
+        location_id = self.request.GET.get('location_id')
+        name = request.data.get('name')
+        today = datetime.date.today()
+        description = request.data.get('description')
+        if location_id:
+            shifts = Shift.objects.filter(location=location_id)
+        else:
+            shifts = Shift.objects.all()
+        if shifts:
+            temp = Template.objects.create(name=name,description=description,date=today)
+            temp.shifts.set(shifts)
+            return Response("Template Created, all shifts has been copied")
+        else:
+            return Response("Please create shifts first")
+        
+# Load Template
+class LoadTemplate(viewsets.ModelViewSet):
+    serializer_class = TemplateSerializer
+    def get_queryset(self):
+        template_id = self.request.GET.get('template_id')
+        if template_id:
+            data = []
+            queryset = Template.objects.filter(id=template_id)
+            for data in queryset:
+                shifts = data.shifts.all()
+                for shift in shifts:
+                    copied_instance = Shift.objects.create(
+                    user = shift.user,
+                    area = shift.area,
+                    start = shift.start,
+                    finish = shift.finish,
+                    start_date = shift.start_date,
+                    end_date = shift.end_date,
+                    publish = shift.publish,
+                    shift_type = shift.shift_type,
+                    location = shift.location
+                    )
+                    print("sgift created", copied_instance.id)
+                    data.shifts.add(copied_instance)
+            return queryset
+        else:
+            queryset = Template.objects.all()
+            return queryset
+        
 # Clone Shifts
 class ShiftCloneView(APIView):
     serializer_class = ShiftSerializer
     def post(self, request):
-        location = self.request.GET.get('location')
-        area = self.request.GET.get('area')
+        shift_id = self.request.GET.get('shift_id')
         no_of_shifts = int(self.request.GET.get('no_of_shifts'))
-        original_instance = Shift.objects.filter(location=location,area=area).first()
-        for shifts in range(no_of_shifts):
-            copied_instance = Shift.objects.create(
-                user = original_instance.user,
-                area = original_instance.area,
-                start = original_instance.start,
-                finish = original_instance.finish,
-                start_date = original_instance.start_date,
-                end_date = original_instance.end_date,
-                publish = original_instance.publish,
-                shift_type = original_instance.shift_type,
-                location = original_instance.location
-            )
-            copied_instance.save()
-            serializer = self.serializer_class(copied_instance)
-            shifts = shifts + 1
-        return Response(serializer)
+        original_instance = Shift.objects.filter(id=shift_id).first()
+        all_data = []
+        if original_instance:
+            for shifts in range(no_of_shifts):
+                copied_instance = Shift.objects.create(
+                    user = original_instance.user,
+                    area = original_instance.area,
+                    start = original_instance.start,
+                    finish = original_instance.finish,
+                    start_date = original_instance.start_date,
+                    end_date = original_instance.end_date,
+                    publish = original_instance.publish,
+                    shift_type = original_instance.shift_type,
+                    location = original_instance.location
+                )
+                copied_instance.save()
+                serializer = self.serializer_class(copied_instance)
+                all_data.append(serializer.data)
+                shifts = shifts + 1
+        else:
+            return Response("No shifts")
+        return Response(all_data)
     
 # download with Csv
 import csv
@@ -496,6 +582,7 @@ class DownloadWithCsv(APIView):
         for obj in all_shifts:
             writer.writerow([obj.location.location_name,obj.user, obj.area, obj.start,obj.finish,obj.start_date,obj.end_date,obj.publish,obj.shift_type])
         return response
+    
 # Send Offers api
 class SendOffers(APIView):
     serializer_class = ShiftSerializer
@@ -524,14 +611,102 @@ class SendOffers(APIView):
 
 class ViewShiftHistory(APIView):
     def get(self,request):
-        shift_id = int(self.request.GET.get('shift_id',None))
-        print(shift_id)
+        shift_id = self.request.GET.get('shift_id',None)
         if shift_id:
-            shift = Shift.objects.get(id=shift_id)
-            return Response({
-                "Created_by": shift.user.username,
-                "Date" : shift.start_date
-            })
+            shift = Shift.objects.filter(id=shift_id).first()
+            if shift:
+                print(shift)
+                print(shift.user)
+                return Response({
+                    "Created_by": shift.user.username,
+                    "Date" : shift.start_date
+                })
+            else:
+                return Response("Shift with ID does not exists")
         else:
             return Response("Please provide Shift ID")
-        
+
+# print by area
+# import io
+# from reportlab.pdfgen import canvas
+# from reportlab.lib import colors
+# from reportlab.lib.pagesizes import letter,landscape
+# from reportlab.lib.units import inch
+
+# from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+# class PrintByArea(APIView):
+#     def get(self,request):
+#         string = self.request.GET.get("string")
+#         business_id = self.request.GET.get("business_id")
+#         business = Business.objects.filter(id=business_id).first()
+
+#         buffer = io.BytesIO()
+#         pdf = canvas.Canvas(buffer, pagesize=letter)
+
+#         today = datetime.date.today()
+#         pdf.drawString(200, 750, "Schedule for "+ business.business_name)
+#         pdf.drawString(230, 730, str(today))
+
+#         PAGE_WIDTH, PAGE_HEIGHT = landscape(letter)
+#         LEFT_MARGIN = inch
+#         RIGHT_MARGIN = inch
+#         TOP_MARGIN = inch
+#         BOTTOM_MARGIN = inch
+#         usable_width = PAGE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
+#         # usable_height = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN
+#         num_columns = 2.2
+#         column_widths = [usable_width / num_columns]
+#         locations = Location.objects.filter(business_location=business)
+#         print(locations)
+#         all_data = []
+#         # if string == "day_by_area":
+#         if locations:
+#             for location in locations:
+#                 code = location.location_code
+#                 areas = Area.objects.filter(location=location)
+#                 for area in areas:
+#                     myarea = area.area_of_work
+#                     shifts = Shift.objects.filter(location=location,area=area)
+#                     for shift in shifts:
+#                         username = shift.user.username
+#                         start = shift.start
+#                         finish = shift.finish
+#                         breaks = Break.objects.filter(shift=shift)
+#                         for mybreak in breaks:
+#                             duration = mybreak.duration
+#                 field = "[" + code + "]" + myarea
+#                 shift_data = username + "\n" + str(start) + "-" + str(finish) + "\n" + str(duration) + " min break"
+#                 data = [
+#                     ["",today],
+#                     [field,shift_data]
+#                     ]
+#             else:
+#                 data = []
+#         table = Table(data,colWidths=column_widths)
+#         table.setStyle(TableStyle([
+#             # ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+#             # ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+#             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+#             # ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#             ('FONTSIZE', (0, 0), (-1, 0), 14),
+#             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+#             # ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+#             # ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+#             ('GRID', (0, 0), (-1, -1), 1, colors.black)
+#         ]))
+    
+#         doc = SimpleDocTemplate('example.pdf', pagesize=landscape(letter),
+#                             leftMargin=LEFT_MARGIN, rightMargin=RIGHT_MARGIN,
+#                             topMargin=TOP_MARGIN, bottomMargin=BOTTOM_MARGIN)
+#         doc.build([table])
+#         table.wrapOn(pdf, 10, 10)
+#         table.drawOn(pdf, 10, 640)
+
+#         pdf.showPage()
+#         pdf.save()
+
+#         buffer.seek(0)
+#         response = HttpResponse(buffer, content_type='application/pdf')
+#         response['Content-Disposition'] = 'attachment; filename="example.pdf"'
+#         return response

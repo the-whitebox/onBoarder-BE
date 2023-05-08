@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from business.models import Business,Location,Area,OperatingHours,Shift,Break
+from business.models import Business,Location,Area,OperatingHours,Shift,Break,Template
 from accounts.models import User
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,13 +14,12 @@ class BusinessSerializer(serializers.ModelSerializer):
             'id', 'business_name', 'mobile_number', 'business_type', 'industry_type', 'employees_range', 'joining_purpose', 
             'payroll_type', 'pay_process_improvement_duration', 'how_you_hear'
             )
-        
     def create(self, validated_data):
         business = Business(**validated_data)
         business.save()
         try:
             user = User.objects.get(id=self.context.get('request', None).user.id if self.context.get('request', None) else 0)
-            user.business = business
+            user.business.add(business)
             user.save()
         except User.DoesNotExist:
             return Response({'error': 'user_not_found'},
@@ -150,7 +149,15 @@ class BreakSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'break_type', 'duration', 'start','finish','shift'
             )
-
+        
+class TemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        depth = 1
+        model = Template
+        fields = (
+            'id', 'name', 'description','date','shifts'
+            )
+    
 class ShiftSerializer(serializers.ModelSerializer):
     shift_break = BreakSerializer(required=False,many=True)
     class Meta:

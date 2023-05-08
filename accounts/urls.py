@@ -13,7 +13,7 @@ from accounts.views import (
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
     InvitationLinkView,CsvReader,
-    CsvNewUsers,EnumsReturn,RoleViewSet
+    CsvNewUsers,EnumsReturn,RoleViewSet,VerificationEmail,CustomLoginView
 )
 
 router = routers.DefaultRouter()
@@ -31,10 +31,10 @@ urlpatterns = [
         'auth/password/reset/confirm/<slug:uidb64>/<slug:token>/',
         PasswordResetConfirmView.as_view(), name='password_reset_confirm'
     ),
+    path('auth/login/', CustomLoginView.as_view()),
     path('auth/', include('dj_rest_auth.urls')),
     path('auth/user/registration/', UserRegistartionView.as_view()),
     path('invitation_link/', InvitationLinkView.as_view()),
-    # path('auth/business/registration/', ),
     path('accounts/', include('allauth.urls')),
     path("invitations/", include('invitations.urls', namespace='invitations')),
 
@@ -51,6 +51,7 @@ urlpatterns = [
     # path('upload/', UploadFileView.as_view(), name='upload-file'),
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
-    path('EnumsReturn/', EnumsReturn.as_view(), name='EnumsReturn')
+    path('Enumsreturn/', EnumsReturn.as_view(), name='Enumsreturn'),
+    path('verify_email/', VerificationEmail.as_view(), name='verify_email')
 
 ]
