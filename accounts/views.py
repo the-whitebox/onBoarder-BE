@@ -31,8 +31,6 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from rest_framework.decorators import authentication_classes, permission_classes
-import jwt
-from rest_framework_jwt.utils import jwt_payload_handler
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -41,10 +39,14 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     def get_queryset(self):
-        queryset = super(UserViewSet, self).get_queryset()
-        if self.request.GET.get('business_id', None):
-            return User.objects.filter(business__id=self.request.GET.get('business_id'))
-        return queryset
+        business_id = self.request.GET.get('business_id',None)
+        business_id = business_id.split(',')
+        if business_id:
+            for business in business_id:
+                data = []
+                queryset =  User.objects.filter(business=business)
+                print(queryset)
+            return queryset
     
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):

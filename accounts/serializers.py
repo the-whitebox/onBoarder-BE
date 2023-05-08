@@ -143,20 +143,29 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         profile_data = validated_data.pop('profile',)
-        profile = UserProfile.objects.create(**profile_data)
+        business_data = validated_data.pop('business',)
 
+        profile = UserProfile.objects.create(**profile_data)
+            
+        # print(validated_data[0])
         # work_detail_data = validated_data.pop('work_detail')
         # pay_detail_data = validated_data.pop('pay_detail')
         # working_hours_data = validated_data.pop('working_hours')
         # leave_entitlements_data = validated_data.pop('leave_entitlements')
         
         password = validated_data.pop('password', None)
+        # for business in business_data:
+        #     print(business)
         user = User(**validated_data, profile=profile)
         if password:
+
             user.set_password(password)
         if user.is_superuser:
             user.is_staff = True
         user.save()
+        user.business.set(business_data)
+
+        print("this is testing")
 
         work_detail = UserWorkDetail.objects.create(user=user)
         hourly_pay_rate = HourlyPayRate.objects.create()

@@ -82,6 +82,9 @@ class Shift(MaxPilotBaseModel):
     finish = models.TimeField()
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(default=timezone.now)
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError('End date cannot be before start date')
     publish = models.BooleanField(default=False)
     shift_type = models.PositiveIntegerField()
     location = models.ForeignKey(Location,related_name='shifts_location', on_delete=models.CASCADE)

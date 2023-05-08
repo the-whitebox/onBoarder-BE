@@ -110,7 +110,6 @@ class SearchMembers(viewsets.ModelViewSet):
             return all_users
 
 class ShowSchedules(viewsets.ModelViewSet):
-
     queryset = Shift.objects.all()
     filter_backends = [filters.SearchFilter]
     serializer_class = ShiftSerializer
@@ -118,6 +117,8 @@ class ShowSchedules(viewsets.ModelViewSet):
         area_id = self.request.GET.get('area_id', None)
         string = self.request.GET.get('string', None)
         location_id = self.request.GET.get('location_id', None)
+        location_id = Location.objects.filter(id=location_id).first()
+        area_id = Area.objects.filter(id=area_id).first()
         user = User.objects.filter(user_location=location_id).first()
         if location_id:
             if area_id:
@@ -144,10 +145,16 @@ class ShowSchedules(viewsets.ModelViewSet):
                 
                 if string == "day_by_team_member":
                     today = timezone.now().date() 
-                    print(today)     
+                    print(today)
+                    print(location_id.id)
+                    print(area_id.id)
+                    print(user.id)
+
                     shifts = Shift.objects.filter(start_date__gte=today,location=location_id,area=area_id,user=user)
+                    print(shifts)
                     return shifts
                 if string == "week_by_team_member":
+                    print("this is weeek")
                     today = timezone.now().date()
                     start_of_week = today - timezone.timedelta(days=today.weekday())
                     end_of_week = start_of_week + timezone.timedelta(days=6)
@@ -403,32 +410,17 @@ class ShiftCopyView(APIView):
 
         today = datetime.date.today()
         previous_day = today - timedelta(days=1)
+        print(previous_day)
         next_day = today + timedelta(days=1)
         original_instance = Shift.objects.filter(location=location).first()
-        if string == "copy to next day":
-            copied_instance = Shift.objects.create(
-                user = original_instance.user,
-                area = original_instance.area,
-                start = original_instance.start,
-                finish = original_instance.finish,
-                start_date = next_day,
-                end_date = original_instance.end_date,
-                publish = original_instance.publish,
-                shift_type = original_instance.shift_type,
-                location = original_instance.location
-            )
-            copied_instance.save()
-            serializer = self.serializer_class(copied_instance)
-            return Response(serializer.data)
-        if string == "copy from previous day":
-            print(original_instance.start_date)
-            if original_instance.start_date == previous_day:
+        if original_instance:
+            if string == "copy to next day":
                 copied_instance = Shift.objects.create(
                     user = original_instance.user,
                     area = original_instance.area,
                     start = original_instance.start,
                     finish = original_instance.finish,
-                    start_date = today,
+                    start_date = next_day,
                     end_date = original_instance.end_date,
                     publish = original_instance.publish,
                     shift_type = original_instance.shift_type,
@@ -437,6 +429,25 @@ class ShiftCopyView(APIView):
                 copied_instance.save()
                 serializer = self.serializer_class(copied_instance)
                 return Response(serializer.data)
+            if string == "copy from previous day":
+                original_instance = Shift.objects.filter(location=location,start_date=previous_day).first()
+                if original_instance:
+                    copied_instance = Shift.objects.create(
+                        user = original_instance.user,
+                        area = original_instance.area,
+                        start = original_instance.start,
+                        finish = original_instance.finish,
+                        start_date = today,
+                        end_date = original_instance.end_date,
+                        publish = original_instance.publish,
+                        shift_type = original_instance.shift_type,
+                        location = original_instance.location
+                    )
+                    copied_instance.save()
+                    serializer = self.serializer_class(copied_instance)
+                    return Response(serializer.data)
+                else:
+                    return Response("Shifts with previous day does not exists")
             
         if string == "Advanced":
             shifts = Shift.objects.filter(area=area_id,start_date=from_date)
@@ -505,12 +516,10 @@ class LoadTemplate(viewsets.ModelViewSet):
     def get_queryset(self):
         template_id = self.request.GET.get('template_id')
         if template_id:
-            # shift_serializer_class = ShiftSerializer
             data = []
             queryset = Template.objects.filter(id=template_id)
             for data in queryset:
                 shifts = data.shifts.all()
-                print(shifts)
                 for shift in shifts:
                     copied_instance = Shift.objects.create(
                     user = shift.user,
@@ -602,14 +611,18 @@ class SendOffers(APIView):
 
 class ViewShiftHistory(APIView):
     def get(self,request):
-        shift_id = int(self.request.GET.get('shift_id',None))
-        print(shift_id)
+        shift_id = self.request.GET.get('shift_id',None)
         if shift_id:
-            shift = Shift.objects.get(id=shift_id)
-            return Response({
-                "Created_by": shift.user.username,
-                "Date" : shift.start_date
-            })
+            shift = Shift.objects.filter(id=shift_id).first()
+            if shift:
+                print(shift)
+                print(shift.user)
+                return Response({
+                    "Created_by": shift.user.username,
+                    "Date" : shift.start_date
+                })
+            else:
+                return Response("Shift with ID does not exists")
         else:
             return Response("Please provide Shift ID")
 

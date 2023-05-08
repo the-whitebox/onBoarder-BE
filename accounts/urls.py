@@ -51,7 +51,7 @@ urlpatterns = [
     # path('upload/', UploadFileView.as_view(), name='upload-file'),
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
-    path('EnumsReturn/', EnumsReturn.as_view(), name='EnumsReturn'),
+    path('Enumsreturn/', EnumsReturn.as_view(), name='Enumsreturn'),
     path('verify_email/', VerificationEmail.as_view(), name='verify_email')
 
 ]
