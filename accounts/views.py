@@ -40,14 +40,12 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     def get_queryset(self):
         business_id = self.request.GET.get('business_id',None)
-        business_id = business_id.split(',')
         if business_id:
             for business in business_id:
-                data = []
                 queryset =  User.objects.filter(business=business)
                 print(queryset)
             return queryset
-    
+
     @action(methods=['patch'], detail=False)
     def bulk_update(self, request):
         print("this is bulk update")
@@ -109,8 +107,13 @@ class GoogleLogin(SocialLoginView):
 
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
-import environ
+import os
 from rest_framework_simplejwt.tokens import RefreshToken
+from dotenv import load_dotenv
+
+load_dotenv()
+Host = os.getenv('Host')
+
 class UserRegistartionView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -149,8 +152,8 @@ class UserRegistartionView(APIView):
             except:
                 pass
             token = get_random_string(length=32)
-            HOST = "http://localhost:3000"
-            verify_link = HOST + '/email-verify/' + token
+            verify_link = Host + "verify-email/"+ token
+            print(verify_link)
             user.email_verified_hash = token
             user.save()
             email_sent = send_mail(

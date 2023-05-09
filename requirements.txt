@@ -11,3 +11,4 @@ django-invitations
 htmlmin
 djangorestframework-jwt
 django-environ
+python-dotenv
