@@ -10,3 +10,4 @@ drf-yasg
 django-invitations
 htmlmin
 djangorestframework-jwt
+django-environ

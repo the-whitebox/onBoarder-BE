@@ -23,12 +23,12 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="URoster API",
+        title="MaxPilot API",
         default_version='v1',
-        description="Welcome to the world of URoster",
-        terms_of_service="https://www.uroster.org",
+        description="Welcome to the world of MaxPilot",
+        terms_of_service="https://www.maxpilot.org",
         contact=openapi.Contact(email="tahir@whiteboxtech.net"),
-        license=openapi.License(name="URoster IP"),
+        license=openapi.License(name="MaxPilot IP"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -49,4 +49,3 @@ urlpatterns = [
     # path('oauth/refresh/', refresh_jwt_token),  # Not Tested
     # path('oauth/verify-token/', verify_jwt_token),  # Not Tested
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
