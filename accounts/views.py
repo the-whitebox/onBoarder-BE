@@ -152,7 +152,7 @@ class UserRegistartionView(APIView):
             except:
                 pass
             token = get_random_string(length=32)
-            verify_link = Host + "verify-email/"+ token
+            verify_link = Host + "verify_email/"+ token
             print(verify_link)
             user.email_verified_hash = token
             user.save()
