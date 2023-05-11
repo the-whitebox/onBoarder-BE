@@ -41,9 +41,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         business_id = self.request.GET.get('business_id',None)
         if business_id:
-            for business in business_id:
-                queryset =  User.objects.filter(business=business)
-                print(queryset)
+            queryset =  User.objects.filter(business=business_id)
+            return queryset
+        else:
+            queryset = User.objects.all()
             return queryset
 
     @action(methods=['patch'], detail=False)
@@ -54,7 +55,6 @@ class UserViewSet(viewsets.ModelViewSet):
             for i in request.data
         }
         response = []
-        print(self.get_queryset().filter(id__in=data.keys()))
         for inst in self.get_queryset().filter(id__in=data.keys()):
             serializer = self.get_serializer(inst, data=data[inst.id], partial=True)
             serializer.is_valid(raise_exception=True)
