@@ -15,6 +15,7 @@ from datetime import timedelta
 from django.utils import timezone
 from dateutil.relativedelta import *
 from rest_framework.decorators import action
+from django.db.models import Q
 from django.db import transaction
 # Create your views here.
 class BusinessRegistrationViewSet(viewsets.ModelViewSet):
@@ -499,6 +500,8 @@ class SaveTemplate(APIView):
         name = request.data.get('name')
         today = datetime.date.today()
         description = request.data.get('description')
+        if Template.objects.filter(Q(name=name)).exists():
+            return Response({'message': f"Template with name '{name}' already exist."}, status.HTTP_400_BAD_REQUEST)
         if location_id:
             shifts = Shift.objects.filter(location=location_id)
         else:
@@ -589,23 +592,27 @@ class SendOffers(APIView):
     def patch(self, request):
         shift_id = request.data.get('shift_id', None)
         user_ids = request.data.get('users', None)
-        shift = Shift.objects.get(id=shift_id)
+        shift = Shift.objects.filter(id=shift_id).first()
         if shift:
             if user_ids:
                 for user_id in user_ids:
-                    user = User.objects.get(id=user_id)
-                    shift.user = user
-                    shift.shift_type = 2
-                    email_sent = send_mail(
-                        'Dupty',
-                        'Your MaxPilot Shift details: you are invited for a shift',
-                        settings.EMAIL_HOST_USER,
-                        [shift.user.email],
-                        fail_silently = False,
-                    )
+                    print(user_id)
+                    user = User.objects.filter(id=user_id).first()
+                    if user:
+                        shift.user = user
+                        shift.shift_type = 2
+                        email_sent = send_mail(
+                            'Dupty',
+                            'Your MaxPilot Shift details: you are invited for a shift',
+                            settings.EMAIL_HOST_USER,
+                            [shift.user.email],
+                            fail_silently = False,
+                        )
+                        shift.save()
+                    else:
+                        return Response(f"Users with ID {user_id} does not exists")
         else:
             return Response("Shift with provided ID does not Exists")
-        shift.save()
         serializer = self.serializer_class(shift)
         return Response(serializer.data)
 
