@@ -12,3 +12,4 @@ htmlmin
 djangorestframework-jwt
 django-environ
 python-dotenv
+python-dateutil
