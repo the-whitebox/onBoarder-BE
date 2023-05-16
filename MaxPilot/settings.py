@@ -245,7 +245,7 @@ timeout=30
 
 
 
-REST_AUTH_SERIALIZERS   = {
+REST_AUTH   = {
     'PASSWORD_RESET_SERIALIZER': 
         'accounts.serializers.CustomPasswordResetSerializer',
     # 'LOGIN_SERIALIZER': 'accounts.serializers.UserSerializer',

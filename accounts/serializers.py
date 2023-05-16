@@ -379,7 +379,7 @@ class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
             if app_settings.AUTHENTICATION_METHOD != app_settings.AuthenticationMethod.EMAIL:
                 context['username'] = user_username(user)
             get_adapter(request).send_mail(
-                'accounts/email/password_reset_key', email, context
+                'account/email/password_reset_key', email, context
             )
 
         return self.cleaned_data['email']
@@ -387,6 +387,7 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
 
     def validate_email(self, value):
         # use the custom reset form
+        print("value", value)
         self.reset_form = CustomAllAuthPasswordResetForm(data=self.initial_data)
         if not self.reset_form.is_valid():
             raise serializers.ValidationError(self.reset_form.errors)
