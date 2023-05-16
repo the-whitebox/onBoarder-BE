@@ -344,7 +344,6 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ('role',)
-
 class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
 
     def clean_email(self):
@@ -367,6 +366,7 @@ class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
             temp_key = token_generator.make_token(user)
 
             path = f"auth/password/reset/confirm/{user_pk_to_url_str(user)}/{temp_key}/"
+            # url = build_absolute_uri(request, path)
             url = Host + path
      #Values which are passed to password_reset_key_message.txt
             context = {
@@ -387,6 +387,7 @@ class CustomPasswordResetSerializer(PasswordResetSerializer):
 
     def validate_email(self, value):
         # use the custom reset form
+        print("value", value)
         self.reset_form = CustomAllAuthPasswordResetForm(data=self.initial_data)
         if not self.reset_form.is_valid():
             raise serializers.ValidationError(self.reset_form.errors)
