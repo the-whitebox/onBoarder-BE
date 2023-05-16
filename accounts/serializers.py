@@ -28,7 +28,9 @@ from allauth.account import app_settings
 from dj_rest_auth.serializers import PasswordResetSerializer
 from dj_rest_auth.forms import AllAuthPasswordResetForm
 from django.contrib.sites.shortcuts import get_current_site
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 User = get_user_model()
 
@@ -343,7 +345,6 @@ class RoleSerializer(serializers.ModelSerializer):
         model = Role
         fields = ('role',)
 
-
 class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
 
     def clean_email(self):
@@ -357,6 +358,7 @@ class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
         return self.cleaned_data["email"]
 
     def save(self, request, **kwargs):
+        Host = os.getenv('Host')
         current_site = get_current_site(request)
         email = self.cleaned_data['email']
         token_generator = kwargs.get('token_generator', default_token_generator)
@@ -364,17 +366,16 @@ class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
         for user in self.users:
             temp_key = token_generator.make_token(user)
 
-            path = f"custom_password_reset_url/{user_pk_to_url_str(user)}/{temp_key}/"
-            url = build_absolute_uri(request, path)
+            path = f"auth/password/reset/confirm/{user_pk_to_url_str(user)}/{temp_key}/"
+            url = Host + path
      #Values which are passed to password_reset_key_message.txt
             context = {
                 "current_site": current_site,
                 "user": user,
-                "password_reset_url": 'url/whitebox/',
+                "password_reset_url": url,
                 "request": request,
                 "path": path,
             }
-            print(context)
             if app_settings.AUTHENTICATION_METHOD != app_settings.AuthenticationMethod.EMAIL:
                 context['username'] = user_username(user)
             get_adapter(request).send_mail(
