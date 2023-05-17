@@ -181,6 +181,9 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'my-app-auth',
     'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
+    'PASSWORD_RESET_SERIALIZER': 
+        'accounts.serializers.CustomPasswordResetSerializer'
+    # 'LOGIN_SERIALIZER': 'accounts.serializers.UserSerializer',
 }
 
 REST_AUTH_SERIALIZERS = {
@@ -242,11 +245,3 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 timeout=30
-
-
-
-REST_AUTH   = {
-    'PASSWORD_RESET_SERIALIZER': 
-        'accounts.serializers.CustomPasswordResetSerializer',
-    # 'LOGIN_SERIALIZER': 'accounts.serializers.UserSerializer',
-}
