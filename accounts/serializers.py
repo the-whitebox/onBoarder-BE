@@ -167,8 +167,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         user.business.set(business_data)
 
-        print("this is testing")
-
         work_detail = UserWorkDetail.objects.create(user=user)
         hourly_pay_rate = HourlyPayRate.objects.create()
         hourly_one_and_half_overtime_pay_rate = HourlyOneAndHalfOvertimePayRate.objects.create()

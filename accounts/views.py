@@ -18,6 +18,16 @@ from dj_rest_auth.registration.views import (
 from accounts.models import (
     User, UserProfile, ENUMS, Role, Document
     )
+
+from employment.models import (
+    UserWorkDetail, UserPayDetail,
+    UserWorkingHours, UserLeaveEntitlements,
+    HourlyPayRate, HourlyOneAndHalfOvertimePayRate,
+    SalaryPayRate, FixedPayRate, 
+    HourlyFortyFourHourOvertimePayRate, PerDayPayRate,
+    WorkPeriod
+)
+
 from accounts.serializers import (
     UserSerializer, UserProfileSerializer,
     ENUMSerializer,RoleSerializer
@@ -31,6 +41,7 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from rest_framework.decorators import authentication_classes, permission_classes
+from datetime import datetime, timedelta
 
 import logging
 LOG = logging.getLogger('accounts.views')
@@ -136,6 +147,21 @@ class UserRegistartionView(APIView):
 
             
             user = User.objects.create(email=email, role=role, username=username, profile=user_profile)
+
+            work_detail = UserWorkDetail.objects.create(user=user)
+            hourly_pay_rate = HourlyPayRate.objects.create()
+            hourly_one_and_half_overtime_pay_rate = HourlyOneAndHalfOvertimePayRate.objects.create()
+            salary_pay_rate = SalaryPayRate.objects.create()
+            fixed_pay_rate = FixedPayRate.objects.create()
+            hourly_forty_four_hour_overtime_rate = HourlyFortyFourHourOvertimePayRate.objects.create()
+            per_day_pay_rate = PerDayPayRate.objects.create()
+            pay_detail = UserPayDetail.objects.create(user=user, hourly_pay_rate=hourly_pay_rate, hourly_one_and_half_overtime_pay_rate=hourly_one_and_half_overtime_pay_rate,
+            salary_pay_rate=salary_pay_rate, fixed_pay_rate=fixed_pay_rate, hourly_forty_four_hour_overtime_rate=hourly_forty_four_hour_overtime_rate,
+            per_day_pay_rate=per_day_pay_rate)
+            work_period = WorkPeriod.objects.create(user=user)
+            working_hours = UserWorkingHours.objects.create(work_period=work_period, user=user)
+            leave_entitlements = UserLeaveEntitlements.objects.create(user=user)
+
             if password:
                 user.set_password(password)
                 user.save()
@@ -181,7 +207,8 @@ class VerificationEmail(APIView):
                 token = data['token']
             else:
                 return Response("Please provide token")
-            if User.objects.filter(email_verified_hash=token, email_verified=0).exists():
+            time_threshold = datetime.now() - timedelta(hours=12)
+            if User.objects.filter(email_verified_hash=token, email_verified=0, created_on__gte=time_threshold).exists():
                 tokenExists = User.objects.get(email_verified_hash=token, email_verified=0)
                 refresh = RefreshToken.for_user(tokenExists)
                 access = str(refresh.access_token)
