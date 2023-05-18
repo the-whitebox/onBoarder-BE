@@ -13,7 +13,9 @@ from accounts.views import (
     GoogleLogin, GoogleConnect,
     UserRegistartionView, ENUMSViewSet,
     InvitationLinkView,CsvReader,
-    CsvNewUsers,EnumsReturn,RoleViewSet,VerificationEmail,CustomLoginView
+    CsvNewUsers,EnumsReturn,RoleViewSet,
+    VerificationEmail,CustomLoginView,
+    VerificationLinkEmail
 )
 
 router = routers.DefaultRouter()
@@ -52,6 +54,7 @@ urlpatterns = [
     path('csvreader/', CsvReader.as_view(), name='CsvReader'),
     path('csvnewusers/', CsvNewUsers.as_view(), name='csvnewusers'),
     path('Enumsreturn/', EnumsReturn.as_view(), name='Enumsreturn'),
-    path('verify_email/', VerificationEmail.as_view(), name='verify_email')
+    path('verify_email/', VerificationEmail.as_view(), name='verify_email'),
+    path('verify_link_email/', VerificationLinkEmail.as_view(), name='verify_link_email')
 
 ]

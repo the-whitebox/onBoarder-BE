@@ -228,6 +228,30 @@ class VerificationEmail(APIView):
                 }
             return JsonResponse(res) 
 
+class VerificationLinkEmail(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self,request):
+            email = self.request.GET.get('email')
+            user = User.objects.filter(email=email).first()
+            if user:
+                if user.email_verified == True:
+                    return Response({'data': "User is already verified"}, status.HTTP_200_OK)
+                else:
+                    token = get_random_string(length=32)
+                    verify_link = Host + "verify_email/"+ token
+                    user.email_verified_hash = token
+                    user.save()
+                    email_sent = send_mail(
+                        'Your MaxPilot login details',
+                        f"Hi Muhammad Tahir,\n\nWelcome to your MaxPilot trial! We're excited to get you up and running.\nBelow you’ll find your account login information. You’ll need these details to log in on our Web or Mobile Apps.\nConfrm you email by clicking this link \n {verify_link}\n\nEmail address: {user.email}\n\nHappy scheduling!\nThe MaxPilot Team",
+                        settings.EMAIL_HOST_USER,
+                        [user.email],
+                        fail_silently = False,
+                    )
+                    return Response({'data': "please check you email for login credentials"}, status.HTTP_200_OK)
+            else:
+                return Response({'data': "user does not exists,please signup for user creation"}, status.HTTP_200_OK)
+                
 # Custom login
 from dj_rest_auth.views import LoginView
 from rest_framework.authtoken.models import Token
